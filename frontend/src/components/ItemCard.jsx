@@ -1,6 +1,7 @@
 import { Minus, Plus, Trash2, Wand2, Maximize } from "lucide-react";
 import { ImageDrop } from "./ImageDrop";
 import { NumField } from "./Field";
+import { PassportPresets } from "./PassportPresets";
 import { capacity, tileSize } from "../lib/layout";
 
 export const ItemCard = ({ item, i, p, update, remove, canRemove }) => {
@@ -51,6 +52,9 @@ export const ItemCard = ({ item, i, p, update, remove, canRemove }) => {
             <Wand2 size={14} />
           </button>
         </div>
+      )}
+      {!p.duplex && (
+        <PassportPresets testid={`${t}-passport`} current={[item.width, item.height]} onApply={(width, height) => set({ width, height })} />
       )}
       {dpi && (
         <p data-testid={`${t}-dpi`} className={`mt-2 font-mono text-[10px] ${dpi < 150 ? "text-amber-400" : "text-emerald-400"}`}>

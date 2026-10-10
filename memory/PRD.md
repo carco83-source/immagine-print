@@ -16,6 +16,9 @@
 - Impaginazione a righe con creazione automatica di più fogli, navigazione fogli in anteprima
 - Rifila bordi (lato client, annullabile); pulsante "Foglio pieno"; crocini per singola immagine (solo fronte)
 
+## Iterazione 3 (2026-06)
+- Preset fototessera (CIE 35×45, Passaporto 35×45 e 35×40, Patente 35×45) per immagine e in fronte/retro, con popover "i" delle regole ICAO
+
 ## Backlog
 - P1: abbondanza (bleed); limite dimensione upload
 - P2: preset (biglietti da visita, cartoline), sovrapposizione registro fronte/retro
