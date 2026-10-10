@@ -1,25 +1,30 @@
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { ImagePlus, X, Crop, Undo2 } from "lucide-react";
-import { loadImage, trimImage } from "../lib/image";
+import { ImagePlus, X, Crop, Undo2, Eraser } from "lucide-react";
+import { loadForPrint, trimImage, hasCheckerboard, removeCheckerboard } from "../lib/image";
 
 export const ImageDrop = ({ label, image, onChange, testid, accent }) => {
   const ref = useRef(null);
   const [busy, setBusy] = useState(false);
   const handle = async (file) => {
     if (!file || !file.type.startsWith("image/")) return;
-    onChange(await loadImage(file));
+    const img = await loadForPrint(file);
+    if (img.op === "bg") toast.success("Sfondo a quadretti/trasparente sostituito con bianco");
+    onChange(img);
   };
-  const trim = async (e) => {
+  const run = (op, fn, okMsg, noneMsg) => async (e) => {
     e.stopPropagation();
-    if (image.original) return onChange(image.original);
+    if (image.op === op) return onChange(image.prev);
     setBusy(true);
-    const t = await trimImage(image);
+    const t = await fn(image);
     setBusy(false);
-    if (!t) return toast.info("Nessun bordo da rifilare");
-    onChange({ ...t, original: image });
-    toast.success(`Rifilata: ${image.w}×${image.h} → ${t.w}×${t.h}px`);
+    if (!t) return toast.info(noneMsg);
+    onChange({ ...t, prev: image, op });
+    toast.success(okMsg(t));
   };
+  const trim = run("trim", trimImage, (t) => `Rifilata: ${image.w}×${image.h} → ${t.w}×${t.h}px`, "Nessun bordo da rifilare");
+  const clearBg = run("bg", removeCheckerboard, () => "Sfondo sostituito con bianco", "Nessuno sfondo a quadretti trovato");
+  const btn = (on) => `rounded-sm p-1 transition-colors ${on ? "bg-[#E6007E] text-white" : "bg-black/60 text-slate-300 hover:bg-[#E6007E] hover:text-white"}`;
   return (
     <div
       data-testid={`${testid}-dropzone`}
@@ -38,10 +43,13 @@ export const ImageDrop = ({ label, image, onChange, testid, accent }) => {
           <img src={image.url} alt={label} className="h-full w-full object-contain p-2 pb-5" />
           <span data-testid={`${testid}-info`} className="absolute bottom-1 left-2 font-mono text-[9px] text-slate-400">{image.w}×{image.h}px</span>
           <div className="absolute right-1.5 top-1.5 z-10 flex gap-1">
+            <button data-testid={`${testid}-clear-bg`} onClick={clearBg} disabled={busy}
+              title={image.op === "bg" ? "Ripristina sfondo" : "Rimuovi sfondo a quadretti"} className={btn(image.op === "bg")}>
+              {image.op === "bg" ? <Undo2 size={13} /> : <Eraser size={13} />}
+            </button>
             <button data-testid={`${testid}-trim`} onClick={trim} disabled={busy}
-              title={image.original ? "Annulla rifilatura" : "Rifila bordi"}
-              className={`rounded-sm p-1 transition-colors ${image.original ? "bg-[#E6007E] text-white" : "bg-black/60 text-slate-300 hover:bg-[#E6007E] hover:text-white"}`}>
-              {image.original ? <Undo2 size={13} /> : <Crop size={13} />}
+              title={image.op === "trim" ? "Annulla rifilatura" : "Rifila bordi"} className={btn(image.op === "trim")}>
+              {image.op === "trim" ? <Undo2 size={13} /> : <Crop size={13} />}
             </button>
             <button data-testid={`${testid}-remove`} onClick={(e) => { e.stopPropagation(); onChange(null); }}
               className="rounded-sm bg-black/60 p-1 text-slate-300 transition-colors hover:bg-red-500 hover:text-white">

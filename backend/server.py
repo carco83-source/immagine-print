@@ -117,9 +117,19 @@ def cut_lines(page):
     return [tuple(round(v, 4) for v in s) for s in segs if not _hits(s, page)]
 
 
+def flatten(img: Image.Image):
+    img = ImageOps.exif_transpose(img)
+    if img.mode in ("RGBA", "LA", "PA") or (img.mode == "P" and "transparency" in img.info):
+        img = img.convert("RGBA")
+        bg = Image.new("RGB", img.size, "white")
+        bg.paste(img, mask=img.split()[3])
+        return bg
+    return img.convert("RGB")
+
+
 def prepare_tile(img: Image.Image, w_cm, h_cm, p: Params, rotate: bool):
     size = (max(1, round(w_cm / 2.54 * p.dpi)), max(1, round(h_cm / 2.54 * p.dpi)))
-    img = ImageOps.exif_transpose(img).convert("RGB")
+    img = flatten(img)
     if p.fit == "cover":
         tile = ImageOps.fit(img, size, Image.LANCZOS)
     elif p.fit == "stretch":

@@ -8,7 +8,7 @@ import { Controls } from "./components/Controls";
 import { ExportBar } from "./components/ExportBar";
 import { SheetPreview } from "./components/SheetPreview";
 import { computePages } from "./lib/layout";
-import { loadImage } from "./lib/image";
+import { loadForPrint } from "./lib/image";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -33,7 +33,8 @@ export default function App() {
   const update = (id, patch) => setItems((s) => s.map((it) => (it.id === id ? { ...it, ...patch } : it)));
   const remove = (id) => setItems((s) => s.filter((it) => it.id !== id));
   const addFiles = async (files) => {
-    const imgs = await Promise.all(files.filter((f) => f.type.startsWith("image/")).map(loadImage));
+    const imgs = await Promise.all(files.filter((f) => f.type.startsWith("image/")).map(loadForPrint));
+    if (imgs.some((i) => i.op === "bg")) toast.success("Sfondo a quadretti/trasparente sostituito con bianco");
     if (!imgs.length) return;
     const fresh = imgs.map((img) => newItem(img));
     setItems((s) => (s.length === 1 && !s[0].front ? fresh : [...s, ...fresh]));
