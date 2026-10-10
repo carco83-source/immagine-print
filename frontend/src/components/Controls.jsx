@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 import { Switch } from "./ui/switch";
 import { Section, NumField, Segmented } from "./Field";
 import { ItemCard } from "./ItemCard";
-import { PassportPresets } from "./PassportPresets";
+import { PassportPresets, QuickFormats } from "./PassportPresets";
 import { SHEETS } from "../lib/layout";
 
 export const Controls = ({ p, set, items, update, remove, addFiles, info }) => {
@@ -24,6 +24,7 @@ export const Controls = ({ p, set, items, update, remove, addFiles, info }) => {
               <NumField label="Altezza" value={p.height} onChange={(v) => set({ height: v })} testid="height-input" />
             </div>
             <PassportPresets testid="duplex-passport" current={[p.width, p.height]} onApply={(width, height) => set({ width, height })} />
+            <QuickFormats testid="duplex-quick" current={[p.width, p.height]} onApply={(width, height) => set({ width, height })} />
           </div>
         )}
         <div className="space-y-3">

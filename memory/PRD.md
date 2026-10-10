@@ -18,6 +18,7 @@
 
 ## Iterazione 3 (2026-06)
 - Preset fototessera (CIE 35×45, Passaporto 35×45 e 35×40, Patente 35×45) per immagine e in fronte/retro, con popover "i" delle regole ICAO
+- Formati rapidi: biglietto visita 85×55, cartolina 150×100, A6 148×105, invito 120×170, invito quadro 150×150, invito DL 210×99 (regole fototessera solo informative)
 
 ## Backlog
 - P1: abbondanza (bleed); limite dimensione upload
