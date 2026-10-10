@@ -1,60 +1,80 @@
 export const SHEETS = {
-  A4: { w: 21.0, h: 29.7, label: "A4", desc: "210 × 297 mm" },
-  A3: { w: 29.7, h: 42.0, label: "A3", desc: "297 × 420 mm" },
-  "32x45": { w: 32.0, h: 45.0, label: "32×45", desc: "320 × 450 mm" },
-  A5: { w: 14.8, h: 21.0, label: "A5", desc: "148 × 210 mm" },
+  A4: { w: 21.0, h: 29.7, label: "A4", desc: "210 × 297" },
+  A3: { w: 29.7, h: 42.0, label: "A3", desc: "297 × 420" },
+  "32x45": { w: 32.0, h: 45.0, label: "32×45", desc: "320 × 450" },
+  A5: { w: 14.8, h: 21.0, label: "A5", desc: "148 × 210" },
 };
 
-export const MARK_OFFSET = 0.2;
-export const MARK_LEN = 0.5;
+const O = 0.2;
+const L = 0.5;
+const EPS = 1e-6;
 
-export function computeLayout(p) {
-  let { w: W, h: H } = SHEETS[p.sheet];
-  if (p.orientation === "landscape") [W, H] = [H, W];
+export function sheetDims(p) {
+  const { w, h } = SHEETS[p.sheet];
+  return p.orientation === "landscape" ? [h, w] : [w, h];
+}
+
+export const tileSize = (it, p) => (p.duplex ? [p.width, p.height] : [it.width, it.height]);
+
+export function capacity(w, h, p) {
+  const [W, H] = sheetDims(p);
   const aw = W - p.margin_left - p.margin_right;
   const ah = H - p.margin_top - p.margin_bottom;
-  const valid = p.width > 0 && p.height > 0;
-  const cols = valid ? Math.max(0, Math.floor((aw + p.gap + 1e-9) / (p.width + p.gap))) : 0;
-  const rows = valid ? Math.max(0, Math.floor((ah + p.gap + 1e-9) / (p.height + p.gap))) : 0;
-  const cap = cols * rows;
-  const n = p.copies === 0 ? cap : Math.min(p.copies, cap);
-  const usedCols = Math.min(n, cols);
-  const usedRows = cols ? Math.ceil(n / cols) : 0;
-  const bw = usedCols * p.width + Math.max(0, usedCols - 1) * p.gap;
-  const bh = usedRows * p.height + Math.max(0, usedRows - 1) * p.gap;
-  const x0 = p.margin_left + (aw - bw) / 2;
-  const y0 = p.margin_top + (ah - bh) / 2;
-  const pos = Array.from({ length: n }, (_, i) => [
-    x0 + (i % cols) * (p.width + p.gap),
-    y0 + Math.floor(i / cols) * (p.height + p.gap),
-  ]);
-  return { W, H, cap, n, cols, rows, pos, x0, y0, bw, bh, usedCols, usedRows };
+  if (!(w > 0 && h > 0)) return 0;
+  const cols = Math.max(0, Math.floor((aw + p.gap + EPS) / (w + p.gap)));
+  const rows = Math.max(0, Math.floor((ah + p.gap + EPS) / (h + p.gap)));
+  return cols * rows;
 }
 
-export function backPositions(lay, p) {
-  if (p.flip === "long") return lay.pos.map(([x, y]) => [lay.W - x - p.width, y]);
-  return lay.pos.map(([x, y]) => [x, lay.H - y - p.height]);
+export function computePages(items, p) {
+  const [W, H] = sheetDims(p);
+  const aw = W - p.margin_left - p.margin_right;
+  const ah = H - p.margin_top - p.margin_bottom;
+  const pages = [];
+  let cur = [], x = 0, y = 0, rowH = 0, unfit = 0, total = 0;
+  items.forEach((it, idx) => {
+    const [w, h] = tileSize(it, p);
+    const copies = Math.max(0, it.copies || 0);
+    if (!(w > 0 && h > 0) || w > aw + EPS || h > ah + EPS) { unfit += copies; return; }
+    for (let i = 0; i < copies; i++) {
+      if (x > 0 && x + w > aw + EPS) { y += rowH + p.gap; x = 0; rowH = 0; }
+      if (y + h > ah + EPS) { pages.push(cur); cur = []; x = 0; y = 0; rowH = 0; }
+      cur.push({ idx, x, y, w, h });
+      x += w + p.gap;
+      rowH = Math.max(rowH, h);
+      total++;
+    }
+  });
+  if (cur.length) pages.push(cur);
+  pages.forEach((page) => {
+    const ox = p.margin_left + (aw - Math.max(...page.map((t) => t.x + t.w))) / 2;
+    const oy = p.margin_top + (ah - Math.max(...page.map((t) => t.y + t.h))) / 2;
+    page.forEach((t) => { t.x += ox; t.y += oy; });
+  });
+  return { W, H, pages, unfit, total };
 }
 
-export function cutLines(lay, p) {
-  const xs = new Set();
-  const ys = new Set();
-  for (let c = 0; c < lay.usedCols; c++) {
-    const x = lay.x0 + c * (p.width + p.gap);
-    xs.add(+x.toFixed(4)).add(+(x + p.width).toFixed(4));
-  }
-  for (let r = 0; r < lay.usedRows; r++) {
-    const y = lay.y0 + r * (p.height + p.gap);
-    ys.add(+y.toFixed(4)).add(+(y + p.height).toFixed(4));
-  }
-  const top = lay.y0, bottom = lay.y0 + lay.bh, left = lay.x0, right = lay.x0 + lay.bw;
-  const o = MARK_OFFSET, l = MARK_LEN;
-  const lines = [];
-  xs.forEach((x) => {
-    lines.push([x, top - o - l, x, top - o], [x, bottom + o, x, bottom + o + l]);
+export function backTiles(page, W, H, p) {
+  if (p.flip === "long") return page.map((t) => ({ ...t, x: W - t.x - t.w }));
+  return page.map((t) => ({ ...t, y: H - t.y - t.h }));
+}
+
+const hits = ([x1, y1, x2, y2], tiles) =>
+  tiles.some((t) =>
+    x1 === x2
+      ? t.x - EPS <= x1 && x1 <= t.x + t.w + EPS && Math.min(y1, y2) < t.y + t.h - EPS && Math.max(y1, y2) > t.y + EPS
+      : t.y - EPS <= y1 && y1 <= t.y + t.h + EPS && Math.min(x1, x2) < t.x + t.w - EPS && Math.max(x1, x2) > t.x + EPS
+  );
+
+export function cutLines(page) {
+  const segs = [];
+  page.forEach((t) => {
+    [t.x, t.x + t.w].forEach((x) => {
+      segs.push([x, t.y - O - L, x, t.y - O], [x, t.y + t.h + O, x, t.y + t.h + O + L]);
+    });
+    [t.y, t.y + t.h].forEach((y) => {
+      segs.push([t.x - O - L, y, t.x - O, y], [t.x + t.w + O, y, t.x + t.w + O + L, y]);
+    });
   });
-  ys.forEach((y) => {
-    lines.push([left - o - l, y, left - o, y], [right + o, y, right + o + l, y]);
-  });
-  return lines;
+  return segs.filter((s) => !hits(s, page));
 }
