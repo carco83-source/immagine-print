@@ -11,6 +11,11 @@
 - Fronte/retro: retro speculare (lato lungo) o capovolto (lato corto); crocini solo sul fronte
 - Export PDF (2 pagine se fronte/retro), PNG/JPG 150/300/600 dpi (ZIP se fronte/retro)
 
+## Iterazione 2 (2026-06)
+- Più immagini per foglio, ognuna con copie e dimensione proprie (in fronte/retro: dimensione condivisa, retro dedicato per immagine)
+- Impaginazione a righe con creazione automatica di più fogli, navigazione fogli in anteprima
+- Rifila bordi (lato client, annullabile); pulsante "Foglio pieno"; crocini per singola immagine (solo fronte)
+
 ## Backlog
-- P1: immagini diverse sulla stessa pagina; abbondanza (bleed); limite dimensione upload
+- P1: abbondanza (bleed); limite dimensione upload
 - P2: preset (biglietti da visita, cartoline), sovrapposizione registro fronte/retro

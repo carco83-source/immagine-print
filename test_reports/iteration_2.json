@@ -1,0 +1,25 @@
+{
+  "summary": "End-to-end testing of the new multi-item impaginazione API & UI. Backend: 15/15 pytest cases pass (/api/generate multi-image items, shelf packing overflow, duplex PDF pages double, PNG single/zip, duplex zip naming, 400 missing front, 400 nothing fits, 422 invalid sheet/zero copies/empty items, landscape dims). Frontend Playwright: adding multiple images via add-images-input creates item-0 & item-1 cards; per-item copies inc/dec/fill, width/height, ratio button (400x300 w=10 -> h=7.5 ✓), item-N-delete all work; layout-info reflects total copies & sheets; multi-sheet triggers page-prev/next buttons; duplex-switch hides per-item width/height, shows shared width-input/height-input and item-N-back-dropzone + view-front/back-btn; trim test image 1200x900 with green inner rectangle correctly trimmed to 601x501 and undo restores 1200x900; cut-marks-switch toggles; format PDF/PNG/JPG works; export-btn downloads stampa_A4_vert.pdf/png; no-fit-warning shown when item exceeds printable area.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_generate.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py load_image: silently returns None for None/str form fields but raises 400 for Exception; good. However, request.form() has no size limit — large uploads may exhaust memory. Consider using FastAPI UploadFile with size cap or streaming.",
+    "server.py generate(): iterates range(len(p.items)) correctly, but 'back_i' is only loaded when p.duplex is True (good); if duplex and back missing, load_image returns None which is silently rendered as blank in PDF/raster (no error). Should validate backs similar to fronts, otherwise user may get partially blank retro silently.",
+    "lib/image.js trimImage: uses top-left pixel as reference color; if subject touches the top-left pixel the trim returns null (acceptable, falls back to toast info).",
+    "App.js: when p.duplex but items have different widths (e.g., toggled from non-duplex), per-item width/height is unused but still part of state — correct, since tileSize uses shared width in duplex.",
+    "compute_pages re-centers each sheet using max tile extent, which can shift last partial sheet layout — intentional per design."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_generate.py"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "In-memory PIL PNGs for pytest; temp PNGs in /tmp/ptest for Playwright (red 400x300, blue 300x300, trim-test 1200x900 white with green 601x501 rect).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend tests at /app/backend/tests/test_generate.py — 15 cases covering new multi-item API (params.items[], front_i, back_i, duplex shared size, overflow sheets, formats). All data-testids documented in review request were present and functional. Minor code-review suggestion: validate missing backs with 400 when duplex is true (currently silently blank)."
+}
