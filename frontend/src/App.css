@@ -1,0 +1,32 @@
+@import url("https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@500,700,800&f[]=general-sans@400,500,600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap");
+
+body {
+  font-family: "General Sans", system-ui, sans-serif;
+}
+.font-display {
+  font-family: "Cabinet Grotesk", sans-serif;
+}
+.font-mono {
+  font-family: "JetBrains Mono", monospace !important;
+}
+::selection {
+  background: #e6007e;
+  color: #fff;
+}
+.workbench {
+  background-color: #090c10;
+  background-image: radial-gradient(#1f2937 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+.sheet {
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+.sheet-enter {
+  animation: sheetIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes sheetIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+input[type="number"]::-webkit-inner-spin-button { opacity: 0.3; }
