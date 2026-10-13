@@ -15,14 +15,26 @@ export const SheetPreview = ({ info, page, p, items, side }) => {
         fill="none" stroke="#00A8E8" strokeWidth={0.03} strokeDasharray="0.2 0.15" />
       {tiles.map((t, i) => {
         const img = isBack ? items[t.idx]?.back : items[t.idx]?.front;
+        const round = items[t.idx]?.shape === "round";
         return (
           <g key={i} transform={rotate ? `rotate(180 ${t.x + t.w / 2} ${t.y + t.h / 2})` : undefined}>
-            {img ? (
-              <image href={img.url} x={t.x} y={t.y} width={t.w} height={t.h} preserveAspectRatio={ASPECT[items[t.idx].fit]} />
-            ) : (
-              <rect x={t.x} y={t.y} width={t.w} height={t.h} fill="#E5E7EB" />
+            {round && (
+              <clipPath id={`clip-${side}-${i}`}>
+                <ellipse cx={t.x + t.w / 2} cy={t.y + t.h / 2} rx={t.w / 2} ry={t.h / 2} />
+              </clipPath>
             )}
-            <rect x={t.x} y={t.y} width={t.w} height={t.h} fill="none" stroke="#94A3B8" strokeWidth={0.015} />
+            <g clipPath={round ? `url(#clip-${side}-${i})` : undefined}>
+              {img ? (
+                <image href={img.url} x={t.x} y={t.y} width={t.w} height={t.h} preserveAspectRatio={ASPECT[items[t.idx].fit]} />
+              ) : (
+                <rect x={t.x} y={t.y} width={t.w} height={t.h} fill="#E5E7EB" />
+              )}
+            </g>
+            {round ? (
+              <ellipse cx={t.x + t.w / 2} cy={t.y + t.h / 2} rx={t.w / 2} ry={t.h / 2} fill="none" stroke="#94A3B8" strokeWidth={0.015} />
+            ) : (
+              <rect x={t.x} y={t.y} width={t.w} height={t.h} fill="none" stroke="#94A3B8" strokeWidth={0.015} />
+            )}
             <text x={t.x + 0.2} y={t.y + 0.5} fontSize={0.38} fontFamily="JetBrains Mono, monospace" fill={isBack ? "#9333EA" : "#0B0F17"} opacity={0.6}>
               {String.fromCharCode(65 + t.idx)}
             </text>

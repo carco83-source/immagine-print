@@ -1,6 +1,6 @@
 import { Minus, Plus, Trash2, Wand2, Maximize } from "lucide-react";
 import { ImageDrop } from "./ImageDrop";
-import { NumField, FitSelect } from "./Field";
+import { NumField, FitSelect, Segmented } from "./Field";
 import { PassportPresets, QuickFormats } from "./PassportPresets";
 import { capacity, tileSize } from "../lib/layout";
 
@@ -41,6 +41,11 @@ export const ItemCard = ({ item, i, p, update, remove, canRemove }) => {
           className="flex items-center gap-1 rounded-md border border-slate-700 px-2.5 py-2 text-[11px] text-slate-300 transition-colors hover:border-slate-400">
           <Maximize size={12} /> Foglio pieno
         </button>
+      </div>
+      <div className="mt-3">
+        <span className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-slate-500">Forma</span>
+        <Segmented testid={`${t}-shape`} value={item.shape} onChange={(v) => set({ shape: v })}
+          options={[{ value: "rect", label: "Squadrata" }, { value: "round", label: "Rotonda / Ovale" }]} />
       </div>
       {!p.duplex && (
         <div className="mt-3 grid grid-cols-[1fr_1fr_auto] items-end gap-2">

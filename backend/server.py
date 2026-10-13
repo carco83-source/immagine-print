@@ -10,6 +10,7 @@ from reportlab.pdfgen import canvas as rl_canvas
 from reportlab.lib.utils import ImageReader
 from reportlab.lib.units import cm
 import io
+from functools import lru_cache
 import zipfile
 import logging
 
@@ -30,6 +31,7 @@ class Item(BaseModel):
     height: float = Field(gt=0)
     copies: int = Field(ge=1, le=1000)
     fit: Literal["cover", "contain", "stretch"] = "cover"
+    shape: Literal["rect", "round"] = "rect"
 
 
 class Params(BaseModel):
@@ -174,7 +176,16 @@ def render_pdf(p, W, H, pages, fronts, backs):
             key = (id(img), t["w"], t["h"], p.items[t["idx"]].fit, rotate)
             if key not in readers:
                 readers[key] = ImageReader(cache.get(img, t, rotate))
-            c.drawImage(readers[key], t["x"] * cm, (H - t["y"] - t["h"]) * cm, t["w"] * cm, t["h"] * cm)
+            x, y, w, h = t["x"] * cm, (H - t["y"] - t["h"]) * cm, t["w"] * cm, t["h"] * cm
+            round_ = p.items[t["idx"]].shape == "round"
+            if round_:
+                c.saveState()
+                path = c.beginPath()
+                path.ellipse(x, y, w, h)
+                c.clipPath(path, stroke=0, fill=0)
+            c.drawImage(readers[key], x, y, w, h)
+            if round_:
+                c.restoreState()
         if marks:
             c.setLineWidth(0.25)
             for x1, y1, x2, y2 in cut_lines(tiles):
@@ -184,13 +195,24 @@ def render_pdf(p, W, H, pages, fronts, backs):
     return buf.getvalue()
 
 
+@lru_cache(maxsize=32)
+def ellipse_mask(size):
+    big = Image.new("L", (size[0] * 4, size[1] * 4), 0)
+    ImageDraw.Draw(big).ellipse([0, 0, big.width - 1, big.height - 1], fill=255)
+    return big.resize(size, Image.LANCZOS)
+
+
 def render_raster(p, W, H, tiles, imgs, marks, rotate, cache):
     k = p.dpi / 2.54
     sheet = Image.new("RGB", (round(W * k), round(H * k)), "white")
     for t in tiles:
         img = imgs[t["idx"]]
         if img is not None:
-            sheet.paste(cache.get(img, t, rotate), (round(t["x"] * k), round(t["y"] * k)))
+            tile = cache.get(img, t, rotate)
+            mask = None
+            if p.items[t["idx"]].shape == "round":
+                mask = ellipse_mask(tile.size)
+            sheet.paste(tile, (round(t["x"] * k), round(t["y"] * k)), mask)
     if marks:
         d = ImageDraw.Draw(sheet)
         lw = max(1, round(0.025 * k))
