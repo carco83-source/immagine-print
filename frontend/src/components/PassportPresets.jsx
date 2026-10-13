@@ -3,10 +3,7 @@ import { Info, IdCard, LayoutTemplate } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 const PASSPORT = [
-  { id: "cie", label: "CIE", w: 3.5, h: 4.5, note: "35×45 mm · volto 70–80% · min 400 dpi" },
-  { id: "pass", label: "Passaporto", w: 3.5, h: 4.5, note: "35×45 mm · standard ICAO" },
-  { id: "pass40", label: "Passap. 35×40", w: 3.5, h: 4.0, note: "35×40 mm · contesti specifici" },
-  { id: "pat", label: "Patente", w: 3.5, h: 4.5, note: "35×45 mm" },
+  { id: "foto", label: "CIE · Passaporto · Patente", w: 3.5, h: 4.5, note: "35×45 mm · standard ICAO · volto 70–80% · min 400 dpi" },
 ];
 
 const QUICK = [
@@ -37,7 +34,7 @@ const RulesPopover = ({ testid }) => (
       <h3 className="mb-1 text-sm font-semibold">Regole generali (Standard ICAO)</h3>
       <p className="mb-2 text-[10px] text-slate-500">Solo indicative: la generazione funziona comunque.</p>
       <ul className="mb-3 space-y-0.5 font-mono text-[10px] text-slate-400">
-        {PASSPORT.map((p) => <li key={p.id}><span className="text-slate-200">{p.label}</span> — {p.note}</li>)}
+        <li><span className="text-slate-200">CIE, Passaporto, Patente</span> — 35×45 mm, volto 70–80%, min 400 dpi</li>
       </ul>
       <ul className="space-y-2">
         {RULES.map(([k, v]) => (
@@ -76,7 +73,7 @@ const PresetGroup = ({ testid, title, icon: Icon, presets, cols, current, onAppl
 };
 
 export const PassportPresets = ({ testid, current, onApply }) => (
-  <PresetGroup testid={testid} title="Fototessera documenti" icon={IdCard} presets={PASSPORT} cols={4}
+  <PresetGroup testid={testid} title="Fototessera documenti" icon={IdCard} presets={PASSPORT} cols={1}
     current={current} onApply={onApply} extra={<RulesPopover testid={testid} />} />
 );
 
