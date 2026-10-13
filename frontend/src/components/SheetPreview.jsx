@@ -18,7 +18,7 @@ export const SheetPreview = ({ info, page, p, items, side }) => {
         return (
           <g key={i} transform={rotate ? `rotate(180 ${t.x + t.w / 2} ${t.y + t.h / 2})` : undefined}>
             {img ? (
-              <image href={img.url} x={t.x} y={t.y} width={t.w} height={t.h} preserveAspectRatio={ASPECT[p.fit]} />
+              <image href={img.url} x={t.x} y={t.y} width={t.w} height={t.h} preserveAspectRatio={ASPECT[items[t.idx].fit]} />
             ) : (
               <rect x={t.x} y={t.y} width={t.w} height={t.h} fill="#E5E7EB" />
             )}

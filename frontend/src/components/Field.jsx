@@ -46,3 +46,10 @@ export const Segmented = ({ options, value, onChange, testid }) => (
     ))}
   </div>
 );
+
+export const FitSelect = ({ testid, value, onChange }) => (
+  <div className="mt-3">
+    <Segmented testid={testid} value={value} onChange={onChange}
+      options={[{ value: "cover", label: "Riempi" }, { value: "contain", label: "Adatta" }, { value: "stretch", label: "Deforma" }]} />
+  </div>
+);

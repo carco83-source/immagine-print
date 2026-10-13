@@ -62,10 +62,6 @@ export const Controls = ({ p, set, items, update, remove, addFiles, info }) => {
           <NumField label="Margine sin." value={p.margin_left} onChange={(v) => set({ margin_left: v })} testid="margin-left-input" />
           <NumField label="Margine des." value={p.margin_right} onChange={(v) => set({ margin_right: v })} testid="margin-right-input" />
         </div>
-        <div className="mt-3">
-          <Segmented testid="fit" value={p.fit} onChange={(v) => set({ fit: v })}
-            options={[{ value: "cover", label: "Riempi" }, { value: "contain", label: "Adatta" }, { value: "stretch", label: "Deforma" }]} />
-        </div>
       </Section>
 
       <Section n={4} title="Taglio & Retro">

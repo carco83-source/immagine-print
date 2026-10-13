@@ -1,6 +1,6 @@
 import { Minus, Plus, Trash2, Wand2, Maximize } from "lucide-react";
 import { ImageDrop } from "./ImageDrop";
-import { NumField } from "./Field";
+import { NumField, FitSelect } from "./Field";
 import { PassportPresets, QuickFormats } from "./PassportPresets";
 import { capacity, tileSize } from "../lib/layout";
 
@@ -53,6 +53,7 @@ export const ItemCard = ({ item, i, p, update, remove, canRemove }) => {
           </button>
         </div>
       )}
+      <FitSelect testid={`${t}-fit`} value={item.fit} onChange={(v) => set({ fit: v })} />
       {!p.duplex && (
         <PassportPresets testid={`${t}-passport`} current={[item.width, item.height]} onApply={(width, height) => set({ width, height })} />
       )}

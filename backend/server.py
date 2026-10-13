@@ -29,6 +29,7 @@ class Item(BaseModel):
     width: float = Field(gt=0)
     height: float = Field(gt=0)
     copies: int = Field(ge=1, le=1000)
+    fit: Literal["cover", "contain", "stretch"] = "cover"
 
 
 class Params(BaseModel):
@@ -43,7 +44,6 @@ class Params(BaseModel):
     margin_left: float = Field(ge=0, default=1)
     margin_right: float = Field(ge=0, default=1)
     gap: float = Field(ge=0, default=0)
-    fit: Literal["cover", "contain", "stretch"] = "cover"
     cut_marks: bool = True
     flip: Literal["long", "short"] = "long"
     format: Literal["pdf", "png", "jpg"] = "pdf"
@@ -127,12 +127,12 @@ def flatten(img: Image.Image):
     return img.convert("RGB")
 
 
-def prepare_tile(img: Image.Image, w_cm, h_cm, p: Params, rotate: bool):
+def prepare_tile(img: Image.Image, w_cm, h_cm, fit, p: Params, rotate: bool):
     size = (max(1, round(w_cm / 2.54 * p.dpi)), max(1, round(h_cm / 2.54 * p.dpi)))
     img = flatten(img)
-    if p.fit == "cover":
+    if fit == "cover":
         tile = ImageOps.fit(img, size, Image.LANCZOS)
-    elif p.fit == "stretch":
+    elif fit == "stretch":
         tile = img.resize(size, Image.LANCZOS)
     else:
         inner = ImageOps.contain(img, size, Image.LANCZOS)
@@ -146,9 +146,10 @@ class TileCache:
         self.p, self.cache = p, {}
 
     def get(self, img, t, rotate):
-        key = (id(img), t["w"], t["h"], rotate)
+        fit = self.p.items[t["idx"]].fit
+        key = (id(img), t["w"], t["h"], fit, rotate)
         if key not in self.cache:
-            self.cache[key] = prepare_tile(img, t["w"], t["h"], self.p, rotate)
+            self.cache[key] = prepare_tile(img, t["w"], t["h"], fit, self.p, rotate)
         return self.cache[key]
 
 
@@ -170,7 +171,7 @@ def render_pdf(p, W, H, pages, fronts, backs):
             img = imgs[t["idx"]]
             if img is None:
                 continue
-            key = (id(img), t["w"], t["h"], rotate)
+            key = (id(img), t["w"], t["h"], p.items[t["idx"]].fit, rotate)
             if key not in readers:
                 readers[key] = ImageReader(cache.get(img, t, rotate))
             c.drawImage(readers[key], t["x"] * cm, (H - t["y"] - t["h"]) * cm, t["w"] * cm, t["h"] * cm)

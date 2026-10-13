@@ -15,11 +15,11 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const DEFAULTS = {
   sheet: "A4", orientation: "portrait", duplex: false, width: 8.5, height: 5.5,
   margin_top: 1, margin_bottom: 1, margin_left: 1, margin_right: 1, gap: 0,
-  fit: "cover", cut_marks: true, flip: "long", format: "pdf", dpi: 300,
+  cut_marks: true, flip: "long", format: "pdf", dpi: 300,
 };
 
 let uid = 0;
-const newItem = (front = null) => ({ id: ++uid, front, back: null, copies: 1, width: 8.5, height: 5.5 });
+const newItem = (front = null) => ({ id: ++uid, front, back: null, copies: 1, width: 8.5, height: 5.5, fit: "cover" });
 const num = (v) => (Number.isFinite(v) ? v : 0);
 const NUM_KEYS = ["width", "height", "gap", "margin_top", "margin_bottom", "margin_left", "margin_right"];
 
@@ -55,7 +55,7 @@ export default function App() {
     if (p.duplex && items.some((it) => !it.back)) return toast.error("Carica il retro di ogni immagine");
     if (!info.total) return toast.error("Nessuna immagine entra nel foglio");
     const fd = new FormData();
-    fd.append("params", JSON.stringify({ ...clean, items: cleanItems.map(({ width, height, copies }) => ({ width, height, copies })) }));
+    fd.append("params", JSON.stringify({ ...clean, items: cleanItems.map(({ width, height, copies, fit }) => ({ width, height, copies, fit })) }));
     items.forEach((it, i) => {
       fd.append(`front_${i}`, it.front.file);
       if (p.duplex) fd.append(`back_${i}`, it.back.file);
