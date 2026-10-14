@@ -19,7 +19,7 @@ const DEFAULTS = {
 };
 
 let uid = 0;
-const newItem = (front = null) => ({ id: ++uid, front, back: null, copies: 1, width: 8.5, height: 5.5, fit: "cover", shape: "rect" });
+const newItem = (front = null) => ({ id: ++uid, front, back: null, copies: 1, width: 8.5, height: 5.5, fit: "cover", shape: "rect", outline: true });
 const num = (v) => (Number.isFinite(v) ? v : 0);
 const NUM_KEYS = ["width", "height", "gap", "margin_top", "margin_bottom", "margin_left", "margin_right"];
 
@@ -55,7 +55,7 @@ export default function App() {
     if (p.duplex && items.some((it) => !it.back)) return toast.error("Carica il retro di ogni immagine");
     if (!info.total) return toast.error("Nessuna immagine entra nel foglio");
     const fd = new FormData();
-    fd.append("params", JSON.stringify({ ...clean, items: cleanItems.map(({ width, height, copies, fit, shape }) => ({ width, height, copies, fit, shape })) }));
+    fd.append("params", JSON.stringify({ ...clean, items: cleanItems.map(({ width, height, copies, fit, shape, outline }) => ({ width, height, copies, fit, shape, outline })) }));
     items.forEach((it, i) => {
       fd.append(`front_${i}`, it.front.file);
       if (p.duplex) fd.append(`back_${i}`, it.back.file);

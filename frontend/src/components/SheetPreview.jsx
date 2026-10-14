@@ -31,7 +31,8 @@ export const SheetPreview = ({ info, page, p, items, side }) => {
               )}
             </g>
             {round ? (
-              <ellipse cx={t.x + t.w / 2} cy={t.y + t.h / 2} rx={t.w / 2} ry={t.h / 2} fill="none" stroke="#94A3B8" strokeWidth={0.015} />
+              <ellipse data-testid={!isBack && items[t.idx]?.outline ? `outline-${i}` : undefined} cx={t.x + t.w / 2} cy={t.y + t.h / 2} rx={t.w / 2} ry={t.h / 2} fill="none"
+                stroke={!isBack && items[t.idx]?.outline ? "#000" : "#94A3B8"} strokeWidth={!isBack && items[t.idx]?.outline ? 0.03 : 0.015} />
             ) : (
               <rect x={t.x} y={t.y} width={t.w} height={t.h} fill="none" stroke="#94A3B8" strokeWidth={0.015} />
             )}

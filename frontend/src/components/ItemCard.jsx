@@ -1,6 +1,7 @@
 import { Minus, Plus, Trash2, Wand2, Maximize } from "lucide-react";
 import { ImageDrop } from "./ImageDrop";
 import { NumField, FitSelect, Segmented } from "./Field";
+import { Switch } from "./ui/switch";
 import { PassportPresets, QuickFormats } from "./PassportPresets";
 import { capacity, tileSize } from "../lib/layout";
 
@@ -46,6 +47,12 @@ export const ItemCard = ({ item, i, p, update, remove, canRemove }) => {
         <span className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-slate-500">Forma</span>
         <Segmented testid={`${t}-shape`} value={item.shape} onChange={(v) => set({ shape: v })}
           options={[{ value: "rect", label: "Squadrata" }, { value: "round", label: "Rotonda / Ovale" }]} />
+        {item.shape === "round" && (
+          <label className="mt-2 flex cursor-pointer items-center justify-between text-xs text-slate-400">
+            Contorno (solo fronte)
+            <Switch data-testid={`${t}-outline-switch`} checked={item.outline} onCheckedChange={(v) => set({ outline: v })} />
+          </label>
+        )}
       </div>
       {!p.duplex && (
         <div className="mt-3 grid grid-cols-[1fr_1fr_auto] items-end gap-2">

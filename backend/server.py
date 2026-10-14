@@ -32,6 +32,7 @@ class Item(BaseModel):
     copies: int = Field(ge=1, le=1000)
     fit: Literal["cover", "contain", "stretch"] = "cover"
     shape: Literal["rect", "round"] = "rect"
+    outline: bool = True
 
 
 class Params(BaseModel):
@@ -158,9 +159,9 @@ class TileCache:
 def sides(p, W, H, pages, fronts, backs):
     rotate_back = p.flip == "short"
     for page in pages:
-        yield page, fronts, p.cut_marks, False
+        yield page, fronts, p.cut_marks, False, True
         if p.duplex:
-            yield back_tiles(page, W, H, p), backs, False, rotate_back
+            yield back_tiles(page, W, H, p), backs, False, rotate_back, False
 
 
 def render_pdf(p, W, H, pages, fronts, backs):
@@ -168,7 +169,7 @@ def render_pdf(p, W, H, pages, fronts, backs):
     c = rl_canvas.Canvas(buf, pagesize=(W * cm, H * cm))
     c.setTitle("Impaginazione stampa")
     cache, readers = TileCache(p), {}
-    for tiles, imgs, marks, rotate in sides(p, W, H, pages, fronts, backs):
+    for tiles, imgs, marks, rotate, front in sides(p, W, H, pages, fronts, backs):
         for t in tiles:
             img = imgs[t["idx"]]
             if img is None:
@@ -186,6 +187,10 @@ def render_pdf(p, W, H, pages, fronts, backs):
             c.drawImage(readers[key], x, y, w, h)
             if round_:
                 c.restoreState()
+        if front:
+            c.setLineWidth(0.4)
+            for t in outlined(p, tiles):
+                c.ellipse(t["x"] * cm, (H - t["y"] - t["h"]) * cm, (t["x"] + t["w"]) * cm, (H - t["y"]) * cm, stroke=1, fill=0)
         if marks:
             c.setLineWidth(0.25)
             for x1, y1, x2, y2 in cut_lines(tiles):
@@ -202,7 +207,11 @@ def ellipse_mask(size):
     return big.resize(size, Image.LANCZOS)
 
 
-def render_raster(p, W, H, tiles, imgs, marks, rotate, cache):
+def outlined(p, tiles):
+    return [t for t in tiles if p.items[t["idx"]].shape == "round" and p.items[t["idx"]].outline]
+
+
+def render_raster(p, W, H, tiles, imgs, marks, rotate, cache, front):
     k = p.dpi / 2.54
     sheet = Image.new("RGB", (round(W * k), round(H * k)), "white")
     for t in tiles:
@@ -213,6 +222,11 @@ def render_raster(p, W, H, tiles, imgs, marks, rotate, cache):
             if p.items[t["idx"]].shape == "round":
                 mask = ellipse_mask(tile.size)
             sheet.paste(tile, (round(t["x"] * k), round(t["y"] * k)), mask)
+    if front:
+        d = ImageDraw.Draw(sheet)
+        lw = max(1, round(0.015 * k))
+        for t in outlined(p, tiles):
+            d.ellipse([t["x"] * k, t["y"] * k, (t["x"] + t["w"]) * k - 1, (t["y"] + t["h"]) * k - 1], outline="black", width=lw)
     if marks:
         d = ImageDraw.Draw(sheet)
         lw = max(1, round(0.025 * k))
@@ -265,10 +279,10 @@ async def generate(request: Request):
     files = []
     for n, page in enumerate(pages, 1):
         prefix = f"foglio{n}_" if len(pages) > 1 else ""
-        files.append((f"{prefix}fronte.{ext}", render_raster(p, W, H, page, fronts, p.cut_marks, False, cache)))
+        files.append((f"{prefix}fronte.{ext}", render_raster(p, W, H, page, fronts, p.cut_marks, False, cache, True)))
         if p.duplex:
             files.append((f"{prefix}retro.{ext}",
-                          render_raster(p, W, H, back_tiles(page, W, H, p), backs, False, p.flip == "short", cache)))
+                          render_raster(p, W, H, back_tiles(page, W, H, p), backs, False, p.flip == "short", cache, False)))
     if len(files) == 1:
         mt = "image/jpeg" if ext == "jpg" else "image/png"
         return Response(files[0][1], media_type=mt,
