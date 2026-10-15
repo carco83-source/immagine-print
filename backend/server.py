@@ -120,6 +120,22 @@ def cut_lines(page):
     return [tuple(round(v, 4) for v in s) for s in segs if not _hits(s, page)]
 
 
+CROSS = 0.2
+
+
+def inner_crosses(page):
+    o, ln = MARK_OFFSET, MARK_LEN
+    pts = set()
+    for t in page:
+        for x, sx in ((t["x"], -1), (t["x"] + t["w"], 1)):
+            for y, sy in ((t["y"], -1), (t["y"] + t["h"], 1)):
+                v = (x, y + sy * o, x, y + sy * (o + ln))
+                h = (x + sx * o, y, x + sx * (o + ln), y)
+                if _hits(v, page) or _hits(h, page):
+                    pts.add((round(x, 4), round(y, 4)))
+    return [(x - CROSS, y, x + CROSS, y) for x, y in pts] + [(x, y - CROSS, x, y + CROSS) for x, y in pts]
+
+
 def flatten(img: Image.Image):
     img = ImageOps.exif_transpose(img)
     if img.mode in ("RGBA", "LA", "PA") or (img.mode == "P" and "transparency" in img.info):
@@ -195,6 +211,12 @@ def render_pdf(p, W, H, pages, fronts, backs):
             c.setLineWidth(0.25)
             for x1, y1, x2, y2 in cut_lines(tiles):
                 c.line(x1 * cm, (H - y1) * cm, x2 * cm, (H - y2) * cm)
+            for color, lw in ((1, 0.9), (0, 0.3)):
+                c.setStrokeGray(color)
+                c.setLineWidth(lw)
+                for x1, y1, x2, y2 in inner_crosses(tiles):
+                    c.line(x1 * cm, (H - y1) * cm, x2 * cm, (H - y2) * cm)
+            c.setStrokeGray(0)
         c.showPage()
     c.save()
     return buf.getvalue()
@@ -218,6 +240,9 @@ def render_raster(p, W, H, tiles, imgs, marks, rotate, cache, front):
         img = imgs[t["idx"]]
         if img is not None:
             tile = cache.get(img, t, rotate)
+            span = (round((t["x"] + t["w"]) * k) - round(t["x"] * k), round((t["y"] + t["h"]) * k) - round(t["y"] * k))
+            if tile.size != span:
+                tile = tile.resize(span, Image.LANCZOS)
             mask = None
             if p.items[t["idx"]].shape == "round":
                 mask = ellipse_mask(tile.size)
@@ -232,6 +257,9 @@ def render_raster(p, W, H, tiles, imgs, marks, rotate, cache, front):
         lw = max(1, round(0.025 * k))
         for x1, y1, x2, y2 in cut_lines(tiles):
             d.line([(x1 * k, y1 * k), (x2 * k, y2 * k)], fill="black", width=lw)
+        for color, w in (("white", lw * 3), ("black", lw)):
+            for x1, y1, x2, y2 in inner_crosses(tiles):
+                d.line([(x1 * k, y1 * k), (x2 * k, y2 * k)], fill=color, width=w)
     out = io.BytesIO()
     if p.format == "jpg":
         sheet.save(out, "JPEG", quality=95, dpi=(p.dpi, p.dpi))

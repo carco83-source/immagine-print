@@ -1,4 +1,4 @@
-import { backTiles, cutLines } from "../lib/layout";
+import { backTiles, cutLines, innerCrosses } from "../lib/layout";
 
 const ASPECT = { cover: "xMidYMid slice", contain: "xMidYMid meet", stretch: "none" };
 
@@ -44,6 +44,10 @@ export const SheetPreview = ({ info, page, p, items, side }) => {
       })}
       {!isBack && p.cut_marks &&
         cutLines(page).map(([x1, y1, x2, y2], i) => <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#000" strokeWidth={0.025} />)}
+      {!isBack && p.cut_marks && ["#fff", "#000"].map((c, k) =>
+        innerCrosses(page).map(([x1, y1, x2, y2], i) => (
+          <line key={`${k}-${i}`} data-testid={k ? `inner-cross-${i}` : undefined} x1={x1} y1={y1} x2={x2} y2={y2} stroke={c} strokeWidth={k ? 0.025 : 0.075} />
+        )))}
     </svg>
   );
 };

@@ -78,3 +78,19 @@ export function cutLines(page) {
   });
   return segs.filter((s) => !hits(s, page));
 }
+
+const CROSS = 0.2;
+
+export function innerCrosses(page) {
+  const pts = new Map();
+  page.forEach((t) => {
+    [[t.x, -1], [t.x + t.w, 1]].forEach(([x, sx]) => {
+      [[t.y, -1], [t.y + t.h, 1]].forEach(([y, sy]) => {
+        const v = [x, y + sy * O, x, y + sy * (O + L)];
+        const h = [x + sx * O, y, x + sx * (O + L), y];
+        if (hits(v, page) || hits(h, page)) pts.set(`${x.toFixed(4)},${y.toFixed(4)}`, [x, y]);
+      });
+    });
+  });
+  return [...pts.values()].flatMap(([x, y]) => [[x - CROSS, y, x + CROSS, y], [x, y - CROSS, x, y + CROSS]]);
+}
