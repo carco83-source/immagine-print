@@ -3,7 +3,6 @@ import { Plus } from "lucide-react";
 import { Switch } from "./ui/switch";
 import { Section, NumField, Segmented } from "./Field";
 import { ItemCard } from "./ItemCard";
-import { PassportPresets, QuickFormats } from "./PassportPresets";
 import { SHEETS } from "../lib/layout";
 
 export const Controls = ({ p, set, items, update, remove, addFiles, info }) => {
@@ -16,20 +15,9 @@ export const Controls = ({ p, set, items, update, remove, addFiles, info }) => {
           <Switch data-testid="duplex-switch" checked={p.duplex} onCheckedChange={(v) => set({ duplex: v })} />
         </label>
       }>
-        {p.duplex && (
-          <div className="mb-3 rounded-md border border-[#9333EA]/30 bg-[#9333EA]/10 p-3">
-            <p className="mb-2 text-[11px] text-purple-200">In fronte/retro tutte le immagini hanno la stessa dimensione.</p>
-            <div className="grid grid-cols-2 gap-2">
-              <NumField label="Larghezza" value={p.width} onChange={(v) => set({ width: v })} testid="width-input" />
-              <NumField label="Altezza" value={p.height} onChange={(v) => set({ height: v })} testid="height-input" />
-            </div>
-            <PassportPresets testid="duplex-passport" current={[p.width, p.height]} onApply={(width, height) => set({ width, height })} />
-            <QuickFormats testid="duplex-quick" current={[p.width, p.height]} onApply={(width, height) => set({ width, height })} />
-          </div>
-        )}
         <div className="space-y-3">
           {items.map((it, i) => (
-            <ItemCard key={it.id} item={it} i={i} p={p} update={update} remove={remove} canRemove={items.length > 1} />
+            <ItemCard key={it.id} item={it} i={i} p={p} setP={set} update={update} remove={remove} canRemove={items.length > 1} />
           ))}
         </div>
         <input ref={ref} type="file" accept="image/*" multiple hidden data-testid="add-images-input"

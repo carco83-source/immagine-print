@@ -5,12 +5,14 @@ import { Switch } from "./ui/switch";
 import { PassportPresets, QuickFormats } from "./PassportPresets";
 import { capacity, tileSize } from "../lib/layout";
 
-export const ItemCard = ({ item, i, p, update, remove, canRemove }) => {
+export const ItemCard = ({ item, i, p, setP, update, remove, canRemove }) => {
   const t = `item-${i}`;
   const set = (patch) => update(item.id, patch);
   const ratio = item.front ? item.front.h / item.front.w : null;
   const [w] = tileSize(item, p);
   const dpi = item.front && w > 0 ? Math.round(item.front.w / (w / 2.54)) : null;
+  const sz = p.duplex ? { width: p.width, height: p.height } : item;
+  const setSize = p.duplex ? setP : set;
   const fill = () => set({ copies: Math.max(1, capacity(...tileSize(item, p), p)) });
 
   return (
@@ -27,6 +29,30 @@ export const ItemCard = ({ item, i, p, update, remove, canRemove }) => {
         <ImageDrop label="Fronte" image={item.front} onChange={(v) => set({ front: v })} testid={`${t}-front`} accent="#2563EB" />
         {p.duplex && <ImageDrop label="Retro" image={item.back} onChange={(v) => set({ back: v })} testid={`${t}-back`} accent="#9333EA" />}
       </div>
+      <div className="mt-3">
+        <span className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-slate-500">Forma</span>
+        <Segmented testid={`${t}-shape`} value={item.shape} onChange={(v) => set({ shape: v })}
+          options={[{ value: "rect", label: "Squadrata" }, { value: "round", label: "Rotonda / Ovale" }]} />
+        {item.shape === "round" && (
+          <label className="mt-2 flex cursor-pointer items-center justify-between text-xs text-slate-400">
+            Contorno (solo fronte)
+            <Switch data-testid={`${t}-outline-switch`} checked={item.outline} onCheckedChange={(v) => set({ outline: v })} />
+          </label>
+        )}
+      </div>
+      {p.duplex && <p className="mt-3 text-[10px] text-purple-300">Fronte/retro: dimensione uguale per tutte le immagini.</p>}
+      <div className="mt-3 grid grid-cols-[1fr_1fr_auto] items-end gap-2">
+          <NumField label="Largh." value={sz.width} onChange={(v) => setSize({ width: v })} testid={`${t}-width`} />
+          <NumField label="Alt." value={sz.height} onChange={(v) => setSize({ height: v })} testid={`${t}-height`} />
+          <button data-testid={`${t}-ratio`} disabled={!ratio} onClick={() => setSize({ height: +(sz.width * ratio).toFixed(2) })}
+            title="Altezza in proporzione all'immagine"
+            className="mb-0.5 rounded-md border border-slate-700 p-2 text-slate-400 transition-colors hover:border-slate-400 hover:text-white disabled:opacity-30">
+            <Wand2 size={14} />
+          </button>
+        </div>
+      <FitSelect testid={`${t}-fit`} value={item.fit} onChange={(v) => set({ fit: v })} />
+      <PassportPresets testid={`${t}-passport`} current={[sz.width, sz.height]} onApply={(width, height) => setSize({ width, height })} />
+      <QuickFormats testid={`${t}-quick`} current={[sz.width, sz.height]} onApply={(width, height) => setSize({ width, height })} />
       <div className="mt-3 flex items-end gap-2">
         <div>
           <span className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-slate-500">Copie</span>
@@ -43,35 +69,6 @@ export const ItemCard = ({ item, i, p, update, remove, canRemove }) => {
           <Maximize size={12} /> Foglio pieno
         </button>
       </div>
-      <div className="mt-3">
-        <span className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-slate-500">Forma</span>
-        <Segmented testid={`${t}-shape`} value={item.shape} onChange={(v) => set({ shape: v })}
-          options={[{ value: "rect", label: "Squadrata" }, { value: "round", label: "Rotonda / Ovale" }]} />
-        {item.shape === "round" && (
-          <label className="mt-2 flex cursor-pointer items-center justify-between text-xs text-slate-400">
-            Contorno (solo fronte)
-            <Switch data-testid={`${t}-outline-switch`} checked={item.outline} onCheckedChange={(v) => set({ outline: v })} />
-          </label>
-        )}
-      </div>
-      {!p.duplex && (
-        <div className="mt-3 grid grid-cols-[1fr_1fr_auto] items-end gap-2">
-          <NumField label="Largh." value={item.width} onChange={(v) => set({ width: v })} testid={`${t}-width`} />
-          <NumField label="Alt." value={item.height} onChange={(v) => set({ height: v })} testid={`${t}-height`} />
-          <button data-testid={`${t}-ratio`} disabled={!ratio} onClick={() => set({ height: +(item.width * ratio).toFixed(2) })}
-            title="Altezza in proporzione all'immagine"
-            className="mb-0.5 rounded-md border border-slate-700 p-2 text-slate-400 transition-colors hover:border-slate-400 hover:text-white disabled:opacity-30">
-            <Wand2 size={14} />
-          </button>
-        </div>
-      )}
-      <FitSelect testid={`${t}-fit`} value={item.fit} onChange={(v) => set({ fit: v })} />
-      {!p.duplex && (
-        <PassportPresets testid={`${t}-passport`} current={[item.width, item.height]} onApply={(width, height) => set({ width, height })} />
-      )}
-      {!p.duplex && (
-        <QuickFormats testid={`${t}-quick`} current={[item.width, item.height]} onApply={(width, height) => set({ width, height })} />
-      )}
       {dpi && (
         <p data-testid={`${t}-dpi`} className={`mt-2 font-mono text-[10px] ${dpi < 150 ? "text-amber-400" : "text-emerald-400"}`}>
           {dpi} DPI {dpi < 150 && "— bassa per la stampa"}
