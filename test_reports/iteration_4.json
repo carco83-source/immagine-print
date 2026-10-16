@@ -1,0 +1,27 @@
+{
+  "summary": "Frontend-only testing of saved templates (IndexedDB), text style (bold/italic/alignment) and front text (left/over). Backend was skipped as requested. All 8 requested scenarios PASS, with 0 page errors. (1) After turning on the tag switch, all testids are present for item-0-front-txt and item-0-back-txt: textarea, font, color, font-upload, font-input, bold, italic, align-left/center/right, plus pos-left/pos-over on the front. Duplex turns on automatically. (2) Pixel analysis of the sheet-preview-front image (425x118 tile). With pos-left the text is only in the left half (dark px left=2160, right=0) and the red image is intact. With pos-over the text is only in the right half (x 230-409) on top of the image (red px dropped 25016 to 22233). (3) Alignment shifts the text bbox: front left x 9-186, center 19-196, right 28-205 in the 0-212 zone. Back left 226-411, right 227-412 (right edge 412 of 425). Bold roughly doubles the ink (2160 to 4148 front, 1387 to 2899 back). Italic changes the render. Every change produces a new data URL. The toggle buttons show the active pink state. (4) Saving with an empty name gives the toast 'Dai un nome al modello'. A valid name gives the toast 'Modello \"TEST_Matrimonio\" salvato', creates template-1 with a PNG thumbnail and the label '9×2.5 cm', and clears the name input. (5) After page reload, template-1 is still listed and templates-empty is hidden. 'Usa' replaces the empty item and restores: image, front text with pos over + bold + align right, back text with italic + align left + color #e6007e, the custom LiberationSerif-Italic font (option '(caricato)' shown, FontFace loaded), fit Adatta, tag on, duplex on, 9x2.5. A second 'Usa' adds item-1. Delete shows a toast, removes the template, and templates-empty comes back. (6) Export with 2 template items: the PDF has 2 pages. PNG gives a zip with fronte.png and retro.png (2480x3508). retro.png contains magenta text and fronte.png the red image + dark front text. (7) Regression OK: multi-image add, sheet-format only in item-0 (A4/A3/32x45/A5), cut-marks toggle (20 lines to 0), duplex with normal items blocked by the toast 'Carica il retro di ogni immagine' until backs are uploaded, then the PDF downloads.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Optional: wrap onSaveTemplate / onUseTemplate / Templates.del in try/catch with an error toast. Today an IndexedDB failure (private mode, quota exceeded) is an unhandled rejection with no user feedback.",
+    "Optional: add a confirmation (or undo toast) before deleting a template."
+  ],
+  "critical_code_review_comments": [
+    "db.js open() opens a new IDBDatabase connection on every call and never closes it. Cache the connection promise.",
+    "onUseTemplate calls set({duplex:true,width,height}) on the shared params. In a mixed job this forces every item to 9x2.5, and export is then blocked until each normal item gets a back. It is consistent with TagToggle but deserves a UI hint.",
+    "drawText auto-fits by width, so a long single line fills the zone and alignment changes are barely visible (only the pad, about 10%). Alignment is clearly noticeable only for short or multi-line text. This is expected behaviour but users may think alignment does nothing.",
+    "The template stores item.front.file. Verify that this is the processed file (background replaced with white) and not the raw upload, so that the restored image matches what was saved.",
+    "Font names are still not sanitized for quotes (carried over from iteration_3)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "skipped", "frontend": "100%"},
+  "seed_data_creation": "Temp PNGs in /tmp/ttag (red.png 400x300, blue.png 300x300). Template TEST_Matrimonio was created and then deleted (IndexedDB in the browser test context only).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Testids: item-N-front-txt-*/item-N-back-txt-* (textarea, font, color, font-upload, font-input, bold, italic, align-left/center/right), item-N-front-txt-pos-left/over, item-N-template-name, item-N-template-save, template-{id}, template-{id}-use, template-{id}-delete, templates-empty. Active toggles have class border-[#E6007E]. Preview tiles are data URLs in the <image> elements of sheet-preview-front/back. Decode one to a canvas and count dark/red pixels to check placement. The export button can be found by the text 'Genera e scarica'; format buttons by the text PNG/JPG."
+}

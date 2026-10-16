@@ -24,6 +24,7 @@
 - Forma rotonda/ovale + contorno (solo fronte), croci di taglio interne, riempi/adatta/deforma per immagine, dimensioni sotto upload
 - Biglietto bomboniera 9×2,5: immagine nella metà destra (fronte), testo auto-adattato nella metà destra (retro); font Edwardian/Snell/Alex Brush/Times (con alternative Google gratuite) + upload font utente; colore testo. Composizione lato client (canvas) inviata come PNG
 - Formato foglio spostato nella prima scheda sotto il caricamento immagine
+- Modelli salvati (IndexedDB nel browser: immagine, testi, stili, font personalizzati), testo fronte (accanto/sopra), grassetto/corsivo/allineamento
 
 ## Backlog
 - P1: abbondanza (bleed); limite dimensione upload
