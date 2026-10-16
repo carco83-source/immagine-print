@@ -3,7 +3,6 @@ import { Plus } from "lucide-react";
 import { Switch } from "./ui/switch";
 import { Section, NumField, Segmented } from "./Field";
 import { ItemCard } from "./ItemCard";
-import { SHEETS } from "../lib/layout";
 
 export const Controls = ({ p, set, items, update, remove, addFiles, info }) => {
   const ref = useRef(null);
@@ -32,16 +31,7 @@ export const Controls = ({ p, set, items, update, remove, addFiles, info }) => {
         </p>
       </Section>
 
-      <Section n={2} title="Formato foglio">
-        <Segmented testid="sheet" value={p.sheet} onChange={(v) => set({ sheet: v })}
-          options={Object.entries(SHEETS).map(([k, s]) => ({ value: k, label: s.label, sub: s.desc }))} />
-        <div className="mt-3">
-          <Segmented testid="orientation" value={p.orientation} onChange={(v) => set({ orientation: v })}
-            options={[{ value: "portrait", label: "Verticale" }, { value: "landscape", label: "Orizzontale" }]} />
-        </div>
-      </Section>
-
-      <Section n={3} title="Impaginazione">
+      <Section n={2} title="Impaginazione">
         <div className="grid grid-cols-2 gap-3">
           <NumField label="Spaziatura" value={p.gap} onChange={(v) => set({ gap: v })} testid="gap-input" />
           <div />
@@ -52,7 +42,7 @@ export const Controls = ({ p, set, items, update, remove, addFiles, info }) => {
         </div>
       </Section>
 
-      <Section n={4} title="Taglio & Retro">
+      <Section n={3} title="Taglio & Retro">
         <label className="flex items-center justify-between text-xs text-slate-300">
           <span>Segni di taglio <span className="text-slate-500">(solo fronte)</span></span>
           <Switch data-testid="cut-marks-switch" checked={p.cut_marks} onCheckedChange={(v) => set({ cut_marks: v })} />

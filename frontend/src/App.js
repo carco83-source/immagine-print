@@ -9,6 +9,9 @@ import { ExportBar } from "./components/ExportBar";
 import { SheetPreview } from "./components/SheetPreview";
 import { computePages } from "./lib/layout";
 import { loadForPrint } from "./lib/image";
+import { composeTag, canvasBlob, TAG_FONTS } from "./lib/tag";
+import { useTagPreviews } from "./lib/useTagPreviews";
+import { tileSize } from "./lib/layout";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -19,7 +22,7 @@ const DEFAULTS = {
 };
 
 let uid = 0;
-const newItem = (front = null) => ({ id: ++uid, front, back: null, copies: 1, width: 8.5, height: 5.5, fit: "cover", shape: "rect", outline: true });
+const newItem = (front = null) => ({ id: ++uid, front, back: null, copies: 1, width: 8.5, height: 5.5, fit: "cover", shape: "rect", outline: true, tag: false, text: "", font: TAG_FONTS[0].family, color: "#1F2937" });
 const num = (v) => (Number.isFinite(v) ? v : 0);
 const NUM_KEYS = ["width", "height", "gap", "margin_top", "margin_bottom", "margin_left", "margin_right"];
 
@@ -49,19 +52,26 @@ export default function App() {
   const info = useMemo(() => computePages(cleanItems, clean), [cleanItems, clean]);
   const page = Math.min(pageIdx, Math.max(0, info.pages.length - 1));
   const showBack = p.duplex && view === "back";
+  const tagUrls = useTagPreviews(cleanItems, clean);
 
   const onExport = async () => {
     if (items.some((it) => !it.front)) return toast.error("Carica il fronte di ogni immagine");
-    if (p.duplex && items.some((it) => !it.back)) return toast.error("Carica il retro di ogni immagine");
+    if (p.duplex && items.some((it) => !it.back && !it.tag)) return toast.error("Carica il retro di ogni immagine");
     if (!info.total) return toast.error("Nessuna immagine entra nel foglio");
     const fd = new FormData();
-    fd.append("params", JSON.stringify({ ...clean, items: cleanItems.map(({ width, height, copies, fit, shape, outline }) => ({ width, height, copies, fit, shape, outline })) }));
-    items.forEach((it, i) => {
-      fd.append(`front_${i}`, it.front.file);
-      if (p.duplex) fd.append(`back_${i}`, it.back.file);
-    });
+    fd.append("params", JSON.stringify({ ...clean, items: cleanItems.map(({ width, height, copies, fit, shape, outline, tag }) => ({ width, height, copies, shape, outline, fit: tag ? "stretch" : fit })) }));
     setLoading(true);
     try {
+      for (const [i, it] of cleanItems.entries()) {
+        if (it.tag) {
+          const [w, h] = tileSize(it, clean);
+          fd.append(`front_${i}`, await canvasBlob(await composeTag(it, "front", w, h, p.dpi), `fronte_${i}.png`));
+          if (p.duplex) fd.append(`back_${i}`, await canvasBlob(await composeTag(it, "back", w, h, p.dpi), `retro_${i}.png`));
+        } else {
+          fd.append(`front_${i}`, it.front.file);
+          if (p.duplex) fd.append(`back_${i}`, it.back.file);
+        }
+      }
       const res = await axios.post(`${API}/generate`, fd, { responseType: "blob" });
       const multi = p.format !== "pdf" && (p.duplex || info.pages.length > 1);
       const name = `stampa_${p.sheet}_${p.orientation === "portrait" ? "vert" : "oriz"}.${multi ? "zip" : p.format}`;
@@ -121,7 +131,7 @@ export default function App() {
             )}
           </div>
           <div key={`${p.sheet}${p.orientation}${showBack}${page}`} className="sheet-enter flex min-h-[420px] flex-1 items-center justify-center p-8 lg:p-12">
-            <SheetPreview info={info} page={info.pages[page] || []} p={clean} items={items} side={showBack ? "back" : "front"} />
+            <SheetPreview info={info} page={info.pages[page] || []} p={clean} items={items} side={showBack ? "back" : "front"} tagUrls={tagUrls} />
           </div>
           {info.unfit > 0 && (
             <div data-testid="no-fit-warning" className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-md border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-xs text-amber-300">

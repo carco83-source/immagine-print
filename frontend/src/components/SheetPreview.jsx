@@ -2,7 +2,7 @@ import { backTiles, cutLines, innerCrosses } from "../lib/layout";
 
 const ASPECT = { cover: "xMidYMid slice", contain: "xMidYMid meet", stretch: "none" };
 
-export const SheetPreview = ({ info, page, p, items, side }) => {
+export const SheetPreview = ({ info, page, p, items, side, tagUrls = {} }) => {
   const isBack = side === "back";
   const { W, H } = info;
   const tiles = isBack ? backTiles(page, W, H, p) : page;
@@ -14,7 +14,9 @@ export const SheetPreview = ({ info, page, p, items, side }) => {
         width={Math.max(0, W - p.margin_left - p.margin_right)} height={Math.max(0, H - p.margin_top - p.margin_bottom)}
         fill="none" stroke="#00A8E8" strokeWidth={0.03} strokeDasharray="0.2 0.15" />
       {tiles.map((t, i) => {
-        const img = isBack ? items[t.idx]?.back : items[t.idx]?.front;
+        const it = items[t.idx];
+        const tagUrl = it?.tag ? tagUrls[it.id]?.[side] : null;
+        const img = tagUrl ? { url: tagUrl } : isBack ? it?.back : it?.front;
         const round = items[t.idx]?.shape === "round";
         return (
           <g key={i} transform={rotate ? `rotate(180 ${t.x + t.w / 2} ${t.y + t.h / 2})` : undefined}>
@@ -25,7 +27,7 @@ export const SheetPreview = ({ info, page, p, items, side }) => {
             )}
             <g clipPath={round ? `url(#clip-${side}-${i})` : undefined}>
               {img ? (
-                <image href={img.url} x={t.x} y={t.y} width={t.w} height={t.h} preserveAspectRatio={ASPECT[items[t.idx].fit]} />
+                <image href={img.url} x={t.x} y={t.y} width={t.w} height={t.h} preserveAspectRatio={tagUrl ? "none" : ASPECT[it.fit]} />
               ) : (
                 <rect x={t.x} y={t.y} width={t.w} height={t.h} fill="#E5E7EB" />
               )}
