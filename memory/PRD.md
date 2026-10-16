@@ -20,6 +20,11 @@
 - Preset fototessera (CIE 35×45, Passaporto 35×45 e 35×40, Patente 35×45) per immagine e in fronte/retro, con popover "i" delle regole ICAO
 - Formati rapidi: biglietto visita 85×55, cartolina 150×100, A6 148×105, invito 120×170, invito quadro 150×150, invito DL 210×99 (regole fototessera solo informative)
 
+## Iterazione 4 (2026-06)
+- Forma rotonda/ovale + contorno (solo fronte), croci di taglio interne, riempi/adatta/deforma per immagine, dimensioni sotto upload
+- Biglietto bomboniera 9×2,5: immagine nella metà destra (fronte), testo auto-adattato nella metà destra (retro); font Edwardian/Snell/Alex Brush/Times (con alternative Google gratuite) + upload font utente; colore testo. Composizione lato client (canvas) inviata come PNG
+- Formato foglio spostato nella prima scheda sotto il caricamento immagine
+
 ## Backlog
 - P1: abbondanza (bleed); limite dimensione upload
 - P2: preset (biglietti da visita, cartoline), sovrapposizione registro fronte/retro

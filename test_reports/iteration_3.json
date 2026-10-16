@@ -1,0 +1,26 @@
+{
+  "summary": "Frontend-only testing of the 'Biglietto bomboniera' feature and the sheet-format relocation (backend skipped as requested). All 7 requested scenarios PASS, with 0 page errors. (1) The sheet-format container is inside item-0, after item-0-front-dropzone and before Forma (checked via DOM order). It is not repeated in item-1. A3/A5/A4/landscape all update sheet-dims correctly. (2) item-0-tag-switch turns duplex on and sets width/height to 9/2.5. back-text-slot replaces the back dropzone. The tag-text panel appears with the textarea, the 4-font select (labels show the fallback notes), the color picker and the font upload. (3) Canvas pixel analysis of the front preview: the left half is pure white (0 non-white px) and the image is only in the right half. In the back preview the text is only in the right half. Changing the font (Alex Brush) and the color (#e6007e, seen in the screenshot) re-renders the preview. Uploading LiberationSerif-Italic.ttf adds the option 'LiberationSerif-Italic (caricato)', selects it, applies it and shows a success toast. (4) Fit: Riempi (cover) and Deforma (stretch) fill the whole 4.5x2.5 zone. Adatta (contain) letterboxes inside the zone (white strips left/right). (5) Export with a tag item and no back image: the PDF has 2 pages. PNG gives stampa_A4_vert.zip with fronte.png and retro.png at 2480x3508. On fronte.png the red area is x 1241-1771, exactly the right half of the 9 cm tile, 295 px = 2.5 cm tall. retro.png has the text only in the right half. Cut marks appear only on the front (front has 8 lines, back preview 0). (6) Mixed (normal + tag in duplex): export blocked with the toast 'Carica il retro di ogni immagine' until the normal item's back is uploaded, then the PDF downloads. Turning the tag off brings back the back dropzone. (7) Regression OK: multi-image add, copies +/-, round shape with outline, passport/quick presets, Foglio pieno (11 copies, 2 sheets, pagination), cut-marks toggle, JPG export (zip).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Optional: when tag is turned off, consider restoring the previous size/duplex (currently 9x2.5 and duplex stay on).",
+    "Optional: escape or sanitize custom font names. A file name containing an apostrophe (e.g. Let's.ttf) produces an invalid CSS family string `'Let's'`, so the font silently falls back."
+  ],
+  "critical_code_review_comments": [
+    "TagToggle sets the shared duplex size 9x2.5 for ALL items (duplex uses one size for every item), so in a mixed job the normal item is forced to 9x2.5 too. This is inherent to the shared duplex size and probably acceptable, but it is worth a UI hint.",
+    "Back tile: the text is drawn in the right half of the back tile, while backTiles mirrors the tile positions for a long-edge flip. Physically, the back's right half sits behind the front's LEFT (blank) half. This matches the user's literal spec ('testo nella zona destra'). Confirm that this is the intended physical result.",
+    "addFontFile: the FontFace name comes from the file name without sanitizing. Quotes break the family string.",
+    "useTagPreviews recomposes every tag item whenever anything in the key changes. This is fine at the current scale."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "skipped", "frontend": "100%"},
+  "seed_data_creation": "Temp PNGs in /tmp/ttag (red 400x300, blue 300x300, green 300x300); font: /usr/share/fonts/truetype/liberation/LiberationSerif-Italic.ttf",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Tag-feature testids verified: item-N-tag-switch, item-N-back-text-slot, item-N-tag-text, -tag-textarea, -tag-font, -tag-color, -tag-font-upload, -tag-font-input, sheet-format (only in item-0). Tag preview images are data URLs in sheet-preview-front/back <image>. You can sample their pixels via a canvas in page.evaluate to check the right-half placement. Backend tests: /app/backend/tests/test_generate.py (not re-run this iteration)."
+}

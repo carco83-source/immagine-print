@@ -16,7 +16,7 @@ const subscribe = (fn) => { listeners.add(fn); return () => listeners.delete(fn)
 export const useFonts = () => useSyncExternalStore(subscribe, () => custom);
 
 export async function addFontFile(file) {
-  const name = file.name.replace(/\.\w+$/, "");
+  const name = file.name.replace(/\.\w+$/, "").replace(/['"\\]/g, "");
   const face = new FontFace(name, await file.arrayBuffer());
   await face.load();
   document.fonts.add(face);
