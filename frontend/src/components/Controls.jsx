@@ -3,8 +3,9 @@ import { Plus } from "lucide-react";
 import { Switch } from "./ui/switch";
 import { Section, NumField, Segmented } from "./Field";
 import { ItemCard } from "./ItemCard";
+import { Templates } from "./Templates";
 
-export const Controls = ({ p, set, items, update, remove, addFiles, info }) => {
+export const Controls = ({ p, set, items, update, remove, addFiles, info, onSaveTemplate, onUseTemplate, tplVersion }) => {
   const ref = useRef(null);
   return (
     <>
@@ -16,7 +17,7 @@ export const Controls = ({ p, set, items, update, remove, addFiles, info }) => {
       }>
         <div className="space-y-3">
           {items.map((it, i) => (
-            <ItemCard key={it.id} item={it} i={i} p={p} setP={set} update={update} remove={remove} canRemove={items.length > 1} />
+            <ItemCard key={it.id} item={it} i={i} p={p} setP={set} onSave={onSaveTemplate} update={update} remove={remove} canRemove={items.length > 1} />
           ))}
         </div>
         <input ref={ref} type="file" accept="image/*" multiple hidden data-testid="add-images-input"
@@ -55,6 +56,7 @@ export const Controls = ({ p, set, items, update, remove, addFiles, info }) => {
           </div>
         )}
       </Section>
+      <Templates version={tplVersion} onUse={onUseTemplate} />
     </>
   );
 };

@@ -6,7 +6,7 @@ import { PassportPresets, QuickFormats } from "./PassportPresets";
 import { capacity, tileSize, SHEETS } from "../lib/layout";
 import { TagToggle, TagText } from "./TagPanel";
 
-export const ItemCard = ({ item, i, p, setP, update, remove, canRemove }) => {
+export const ItemCard = ({ item, i, p, setP, onSave, update, remove, canRemove }) => {
   const t = `item-${i}`;
   const set = (patch) => update(item.id, patch);
   const ratio = item.front ? item.front.h / item.front.w : null;
@@ -70,7 +70,7 @@ export const ItemCard = ({ item, i, p, setP, update, remove, canRemove }) => {
           </button>
         </div>
       <FitSelect testid={`${t}-fit`} value={item.fit} onChange={(v) => set({ fit: v })} />
-      {item.tag && <TagText item={item} t={t} set={set} p={p} />}
+      {item.tag && <TagText item={item} t={t} set={set} p={p} onSave={onSave} />}
       <PassportPresets testid={`${t}-passport`} current={[sz.width, sz.height]} onApply={(width, height) => setSize({ width, height })} />
       <QuickFormats testid={`${t}-quick`} current={[sz.width, sz.height]} onApply={(width, height) => setSize({ width, height })} />
       <div className="mt-3 flex items-end gap-2">

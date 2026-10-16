@@ -8,8 +8,9 @@ import { Controls } from "./components/Controls";
 import { ExportBar } from "./components/ExportBar";
 import { SheetPreview } from "./components/SheetPreview";
 import { computePages } from "./lib/layout";
-import { loadForPrint } from "./lib/image";
-import { composeTag, canvasBlob, TAG_FONTS } from "./lib/tag";
+import { loadForPrint, loadImage } from "./lib/image";
+import { composeTag, canvasBlob, newTxt, customFontNames, restoreFonts } from "./lib/tag";
+import { saveTemplate } from "./lib/db";
 import { useTagPreviews } from "./lib/useTagPreviews";
 import { tileSize } from "./lib/layout";
 
@@ -22,7 +23,7 @@ const DEFAULTS = {
 };
 
 let uid = 0;
-const newItem = (front = null) => ({ id: ++uid, front, back: null, copies: 1, width: 8.5, height: 5.5, fit: "cover", shape: "rect", outline: true, tag: false, text: "", font: TAG_FONTS[0].family, color: "#1F2937" });
+const newItem = (front = null) => ({ id: ++uid, front, back: null, copies: 1, width: 8.5, height: 5.5, fit: "cover", shape: "rect", outline: true, tag: false, frontTxt: newTxt({ pos: "left" }), backTxt: newTxt() });
 const num = (v) => (Number.isFinite(v) ? v : 0);
 const NUM_KEYS = ["width", "height", "gap", "margin_top", "margin_bottom", "margin_left", "margin_right"];
 
@@ -41,6 +42,29 @@ export default function App() {
     if (!imgs.length) return;
     const fresh = imgs.map((img) => newItem(img));
     setItems((s) => (s.length === 1 && !s[0].front ? fresh : [...s, ...fresh]));
+  };
+
+  const [tplVersion, setTplVersion] = useState(0);
+  const onSaveTemplate = async (item, name) => {
+    const [w, h] = tileSize(item, p);
+    const thumb = (await composeTag(item, "front", w, h, 60)).toDataURL();
+    const { fit, shape, outline, tag, frontTxt, backTxt } = item;
+    await saveTemplate({
+      name, created: new Date().toISOString(), size: [w, h], thumb,
+      item: { fit, shape, outline, tag, frontTxt, backTxt },
+      image: item.front?.file || null, fonts: customFontNames([frontTxt.font, backTxt.font]),
+    });
+    setTplVersion((v) => v + 1);
+    toast.success(`Modello "${name}" salvato`);
+  };
+  const onUseTemplate = async (tpl) => {
+    await restoreFonts(tpl.fonts || []);
+    const front = tpl.image ? await loadImage(new File([tpl.image], tpl.image.name || "modello.png", { type: tpl.image.type })) : null;
+    const [width, height] = tpl.size;
+    const it = { ...newItem(front), ...tpl.item, width, height };
+    if (it.tag) set({ duplex: true, width, height });
+    setItems((s) => (s.length === 1 && !s[0].front ? [it] : [...s, it]));
+    toast.success(`Modello "${tpl.name}" caricato`);
   };
 
   const clean = useMemo(() => {
@@ -104,7 +128,7 @@ export default function App() {
 
       <div className="flex flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
         <aside className="flex w-full shrink-0 flex-col border-r border-slate-800 bg-[#111827] lg:w-[440px] lg:overflow-y-auto">
-          <Controls {...{ p, set, items, update, remove, addFiles, info }} />
+          <Controls {...{ p, set, items, update, remove, addFiles, info, onSaveTemplate, onUseTemplate, tplVersion }} />
           <ExportBar p={p} set={set} onExport={onExport} loading={loading} disabled={!items.some((it) => it.front)} />
         </aside>
 

@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { saveFont, getFont } from "./db";
 
 export const TAG_W = 9;
 export const TAG_H = 2.5;
@@ -10,20 +11,40 @@ export const TAG_FONTS = [
   { label: "Times New Roman", family: "'Times New Roman', Tinos", note: "se non installato: Tinos" },
 ];
 
+export const newTxt = (extra = {}) => ({ text: "", font: TAG_FONTS[0].family, color: "#1F2937", bold: false, italic: false, align: "center", ...extra });
+
 let custom = [];
 const listeners = new Set();
 const subscribe = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
 export const useFonts = () => useSyncExternalStore(subscribe, () => custom);
+const isCustom = (family) => custom.some((f) => f.family === family);
+const nameOf = (family) => family.replace(/^'|'$/g, "");
 
-export async function addFontFile(file) {
-  const name = file.name.replace(/\.\w+$/, "").replace(/['"\\]/g, "");
-  const face = new FontFace(name, await file.arrayBuffer());
+async function register(name, data) {
+  const face = new FontFace(name, data);
   await face.load();
   document.fonts.add(face);
   const family = `'${name}'`;
-  if (!custom.some((f) => f.family === family)) custom = [...custom, { label: name, family, note: "caricato" }];
+  if (!isCustom(family)) custom = [...custom, { label: name, family, note: "caricato" }];
   listeners.forEach((fn) => fn());
   return family;
+}
+
+export async function addFontFile(file) {
+  const name = file.name.replace(/\.\w+$/, "").replace(/['"\\]/g, "");
+  const family = await register(name, await file.arrayBuffer());
+  await saveFont(name, file);
+  return family;
+}
+
+export const customFontNames = (families) => families.filter(isCustom).map(nameOf);
+
+export async function restoreFonts(names) {
+  for (const name of names) {
+    if (isCustom(`'${name}'`)) continue;
+    const rec = await getFont(name);
+    if (rec) await register(name, await rec.blob.arrayBuffer());
+  }
 }
 
 function drawFit(ctx, img, x, y, w, h, fit) {
@@ -40,26 +61,31 @@ function drawFit(ctx, img, x, y, w, h, fit) {
   ctx.restore();
 }
 
-// Auto-fits multi-line text centered inside the zone.
-function drawText(ctx, text, family, color, x, y, w, h) {
-  const lines = text.split("\n");
-  if (!text.trim()) return;
+const fontCss = (c, size) => `${c.italic ? "italic " : ""}${c.bold ? "bold " : ""}${size}px ${c.font}`;
+
+// Auto-fits multi-line text inside the zone with the chosen style and alignment.
+function drawText(ctx, c, x, y, w, h) {
+  if (!c?.text?.trim()) return;
+  const lines = c.text.split("\n");
   const pad = Math.min(w, h) * 0.1;
   const aw = w - 2 * pad, ah = h - 2 * pad;
   let size = ah / (lines.length * 1.15);
-  ctx.font = `${size}px ${family}`;
+  ctx.font = fontCss(c, size);
   const maxW = Math.max(...lines.map((l) => ctx.measureText(l).width));
   if (maxW > aw) size *= aw / maxW;
-  ctx.font = `${size}px ${family}`;
-  ctx.fillStyle = color;
-  ctx.textAlign = "center";
+  ctx.font = fontCss(c, size);
+  ctx.fillStyle = c.color;
+  ctx.textAlign = c.align;
   ctx.textBaseline = "middle";
+  const tx = c.align === "left" ? x + pad : c.align === "right" ? x + w - pad : x + w / 2;
   const lh = size * 1.15;
   const top = y + h / 2 - (lh * (lines.length - 1)) / 2;
-  lines.forEach((l, i) => ctx.fillText(l, x + w / 2, top + i * lh));
+  lines.forEach((l, i) => ctx.fillText(l, tx, top + i * lh));
 }
 
-// Renders a bomboniera tag tile: image (front) or text (back) in the right half.
+const loadFont = (c) => (c?.text?.trim() ? document.fonts.load(fontCss(c, 40), c.text) : null);
+
+// Renders a bomboniera tag tile: image (+ optional text) on the front, text on the back, right half.
 export async function composeTag(item, side, wcm, hcm, dpi) {
   const k = dpi / 2.54;
   const W = Math.max(1, Math.round(wcm * k)), H = Math.max(1, Math.round(hcm * k));
@@ -70,10 +96,14 @@ export async function composeTag(item, side, wcm, hcm, dpi) {
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, W, H);
   const zx = Math.round(W / 2), zw = W - zx;
-  if (side === "front" && item.front) drawFit(ctx, item.front, zx, 0, zw, H, item.fit);
-  if (side === "back") {
-    await document.fonts.load(`40px ${item.font}`, item.text || "a");
-    drawText(ctx, item.text || "", item.font, item.color, zx, 0, zw, H);
+  if (side === "front") {
+    if (item.front) drawFit(ctx, item.front, zx, 0, zw, H, item.fit);
+    await loadFont(item.frontTxt);
+    if (item.frontTxt?.pos === "left") drawText(ctx, item.frontTxt, 0, 0, zx, H);
+    else drawText(ctx, item.frontTxt, zx, 0, zw, H);
+  } else {
+    await loadFont(item.backTxt);
+    drawText(ctx, item.backTxt, zx, 0, zw, H);
   }
   return cv;
 }

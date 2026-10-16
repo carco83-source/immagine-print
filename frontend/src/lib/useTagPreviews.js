@@ -5,7 +5,7 @@ import { tileSize } from "./layout";
 export function useTagPreviews(items, p) {
   const [urls, setUrls] = useState({});
   const tags = items.filter((it) => it.tag);
-  const key = JSON.stringify(tags.map((it) => [it.id, it.front?.url, it.text, it.font, it.color, it.fit, ...tileSize(it, p)]));
+  const key = JSON.stringify(tags.map((it) => [it.id, it.front?.url, it.frontTxt, it.backTxt, it.fit, ...tileSize(it, p)]));
   useEffect(() => {
     let alive = true;
     (async () => {
