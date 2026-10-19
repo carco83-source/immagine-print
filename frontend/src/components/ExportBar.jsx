@@ -2,7 +2,7 @@ import { Download, Loader2 } from "lucide-react";
 import { Segmented } from "./Field";
 
 export const ExportBar = ({ p, set, onExport, loading, disabled }) => (
-  <div className="sticky bottom-0 mt-auto space-y-3 border-t border-slate-800 bg-[#111827]/95 px-6 py-5 backdrop-blur-md">
+  <div className="sticky bottom-0 z-20 mt-auto space-y-3 border-t border-slate-800 bg-[#111827]/95 px-6 py-5 backdrop-blur-md">
     <div className="grid grid-cols-[1fr_auto] gap-3">
       <Segmented testid="format" value={p.format} onChange={(v) => set({ format: v })}
         options={[{ value: "pdf", label: "PDF" }, { value: "png", label: "PNG" }, { value: "jpg", label: "JPG" }]} />

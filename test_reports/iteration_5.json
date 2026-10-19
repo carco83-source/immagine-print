@@ -1,0 +1,27 @@
+{
+  "summary": "Tested backend and frontend for the tag back-text fix and for per-item sizes in duplex mode. Backend: 18/18 pytest pass (15 existing + 3 new in test_duplex_sizes.py). The new tests cover a duplex PDF with 10x7 and 5x5 items (2 pages), a tag 9x2.5 stretch + normal 6x4 PNG zip (fronte/retro, right colours on each side), and the mirrored back position. Frontend: all 6 requested scenarios PASS with 0 page errors. (1) After turning on item-0-tag-switch, the only text editor is item-0-back-txt; item-0-front-txt is hidden. Size is 9x2.5 and duplex turns on automatically. Typing back text: the front tile has no dark pixels (left=0, right=0, red image only on the right half); the back tile has text only in the right half (dark left=0, right=775). (2) Turning on the front-txt switch shows the editor. pos-left puts text only in the left half (2160 dark px); pos-over puts it on the image in the right half (red 25016 to 22233). Turning the switch off removes the front text (0 dark px) and the back text is unchanged. (3) Duplex with 2 normal images at 10x7 and 5x5: front tiles [3,11.35,10,7] and [13,11.35,5,5]; back tiles [8,..,10,7] and [3,..,5,5]. That is an exact x-mirror (W-x-w) with matching sizes, and flip short mirrors y. Exporting without backs shows the toast 'Carica il retro di ogni immagine'; after uploading backs the PDF has 2 A4 pages. (4) Mixed tag 9x2.5 x3 + normal 6x4 x2 on the same sheet, each with its own size. The no-back toast appears only for the normal item. The PDF has 2 pages. The PNG zip has fronte.png and retro.png (2480x3508): the front has red + blue, the back has yellow + dark text. (5) Template: save TEST_T5, reload, 'Usa' while a normal 6x4 item exists. The new item gets 9x2.5, tag on, duplex on and the back text restored; the existing item stays 6x4. Delete brings back templates-empty. (6) Regression: 3 items at 10x7, 5x5 and 3.5x4.5 non-duplex render at their own sizes. Cut marks go from 32 lines to 0. Sheets A3/32x45/A5/A4 and landscape update sheet-dims. sheet-format appears only once. The PDF downloads.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "ExportBar (sticky)", "issue": "The ImageDrop 'FRONTE' badge and its action icons (z-10) showed through the sticky export bar, which had no z-index, while the sidebar was scrolled. FIXED by adding z-20 to the ExportBar.", "selector": "[data-testid=export-btn] parent", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_generate.py", "/app/backend/tests/test_duplex_sizes.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Optional cleanup in ItemCard.jsx: remove the leftover aliases 'const sz = item; const setSize = set;' and use item/set directly.",
+    "Optional cleanup: tileSize(it, p) / tile_size(it, p) no longer use p; drop the param. DEFAULTS.width/height in App.js are now unused. App.js imports from ./lib/layout on two separate lines; merge them.",
+    "Optional UX: turning the tag switch OFF does not restore the item's previous width/height, so it stays at 9x2.5."
+  ],
+  "critical_code_review_comments": [
+    "The width/height aliases in ItemCard and the unused p param in tileSize are dead indirection left over from the shared-size era.",
+    "TagToggle forces duplex on for the whole job. In a mixed job, normal items then need a back upload before export. This is consistent and the toast explains it, but a UI hint near the toggle would help."
+  ],
+  "updated_files": ["/app/backend/tests/test_duplex_sizes.py", "/app/frontend/src/components/ExportBar.jsx"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "Temp PNGs in /tmp/t5 (red/blue/green/yellow). Template TEST_T5 was created and then deleted (browser IndexedDB).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Tile geometry in the preview can be read from the rect[stroke='#94A3B8'] elements inside sheet-preview-front/back. Tag tile images are data URLs in <image>; decode them to a canvas to count dark/red pixels per half. Backend test helpers (post, default_params, png_bytes) are in test_generate.py. The backend requires dpi >= 72."
+}
