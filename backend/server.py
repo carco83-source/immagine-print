@@ -54,7 +54,7 @@ class Params(BaseModel):
 
 
 def tile_size(it: Item, p: Params):
-    return (p.width, p.height) if p.duplex else (it.width, it.height)
+    return (it.width, it.height)
 
 
 def compute_pages(p: Params):

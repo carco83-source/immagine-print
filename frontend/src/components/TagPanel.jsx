@@ -8,7 +8,7 @@ import { TAG_W, TAG_H } from "../lib/tag";
 export const TagToggle = ({ item, t, set, setP }) => {
   const toggle = (on) => {
     set(on ? { tag: true, width: TAG_W, height: TAG_H, shape: "rect" } : { tag: false });
-    if (on) setP({ duplex: true, width: TAG_W, height: TAG_H });
+    if (on) setP({ duplex: true });
   };
   return (
     <label className="mt-3 flex cursor-pointer items-center justify-between rounded-md border border-[#FFD100]/30 bg-[#FFD100]/5 px-3 py-2 text-xs text-slate-300">
@@ -30,10 +30,16 @@ export const TagText = ({ item, t, set, p, onSave }) => {
   };
   return (
     <>
-      <TextEditor t={`${t}-front-txt`} title="Testo fronte (facoltativo)" accent="#2563EB" showPos
-        cfg={item.frontTxt} onChange={(patch) => set({ frontTxt: { ...item.frontTxt, ...patch } })} placeholder="Grazie!" />
       <TextEditor t={`${t}-back-txt`} title="Testo retro (a destra, 45×25 mm)" accent="#9333EA"
         cfg={item.backTxt} onChange={(patch) => set({ backTxt: { ...item.backTxt, ...patch } })} placeholder={"Marco & Giulia\n12 Giugno 2026"} />
+      <label className="mt-3 flex cursor-pointer items-center justify-between rounded-md border border-slate-800 px-3 py-2 text-xs text-slate-300">
+        <span>Aggiungi testo anche sul fronte</span>
+        <Switch data-testid={`${t}-front-txt-switch`} checked={!!item.frontTxt.on} onCheckedChange={(v) => set({ frontTxt: { ...item.frontTxt, on: v } })} />
+      </label>
+      {item.frontTxt.on && (
+        <TextEditor t={`${t}-front-txt`} title="Testo fronte" accent="#2563EB" showPos
+          cfg={item.frontTxt} onChange={(patch) => set({ frontTxt: { ...item.frontTxt, ...patch } })} placeholder="Grazie!" />
+      )}
       {!p.duplex && <p className="mt-2 text-[10px] text-amber-400">Attiva Fronte / Retro per stampare il testo del retro.</p>}
       <p className="mt-1.5 text-[10px] text-slate-500">La dimensione del testo si adatta automaticamente allo spazio.</p>
       <div className="mt-2 flex gap-2">

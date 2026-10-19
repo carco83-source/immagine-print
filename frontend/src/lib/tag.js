@@ -98,8 +98,9 @@ export async function composeTag(item, side, wcm, hcm, dpi) {
   const zx = Math.round(W / 2), zw = W - zx;
   if (side === "front") {
     if (item.front) drawFit(ctx, item.front, zx, 0, zw, H, item.fit);
+    if (!item.frontTxt?.on) return cv;
     await loadFont(item.frontTxt);
-    if (item.frontTxt?.pos === "left") drawText(ctx, item.frontTxt, 0, 0, zx, H);
+    if (item.frontTxt.pos === "left") drawText(ctx, item.frontTxt, 0, 0, zx, H);
     else drawText(ctx, item.frontTxt, zx, 0, zw, H);
   } else {
     await loadFont(item.backTxt);

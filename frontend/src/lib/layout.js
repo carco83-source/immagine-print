@@ -14,7 +14,7 @@ export function sheetDims(p) {
   return p.orientation === "landscape" ? [h, w] : [w, h];
 }
 
-export const tileSize = (it, p) => (p.duplex ? [p.width, p.height] : [it.width, it.height]);
+export const tileSize = (it) => [it.width, it.height];
 
 export function capacity(w, h, p) {
   const [W, H] = sheetDims(p);

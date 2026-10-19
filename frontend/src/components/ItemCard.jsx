@@ -13,8 +13,8 @@ export const ItemCard = ({ item, i, p, setP, onSave, update, remove, canRemove }
   const [w] = tileSize(item, p);
   const zw = item.tag ? w / 2 : w;
   const dpi = item.front && zw > 0 ? Math.round(item.front.w / (zw / 2.54)) : null;
-  const sz = p.duplex ? { width: p.width, height: p.height } : item;
-  const setSize = p.duplex ? setP : set;
+  const sz = item;
+  const setSize = set;
   const fill = () => set({ copies: Math.max(1, capacity(...tileSize(item, p), p)) });
 
   return (
@@ -59,7 +59,6 @@ export const ItemCard = ({ item, i, p, setP, onSave, update, remove, canRemove }
           </label>
         )}
       </div>
-      {p.duplex && <p className="mt-3 text-[10px] text-purple-300">Fronte/retro: dimensione uguale per tutte le immagini.</p>}
       <div className="mt-3 grid grid-cols-[1fr_1fr_auto] items-end gap-2">
           <NumField label="Largh." value={sz.width} onChange={(v) => setSize({ width: v })} testid={`${t}-width`} />
           <NumField label="Alt." value={sz.height} onChange={(v) => setSize({ height: v })} testid={`${t}-height`} />

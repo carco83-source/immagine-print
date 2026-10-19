@@ -23,7 +23,7 @@ const DEFAULTS = {
 };
 
 let uid = 0;
-const newItem = (front = null) => ({ id: ++uid, front, back: null, copies: 1, width: 8.5, height: 5.5, fit: "cover", shape: "rect", outline: true, tag: false, frontTxt: newTxt({ pos: "left" }), backTxt: newTxt() });
+const newItem = (front = null) => ({ id: ++uid, front, back: null, copies: 1, width: 8.5, height: 5.5, fit: "cover", shape: "rect", outline: true, tag: false, frontTxt: newTxt({ pos: "left", on: false }), backTxt: newTxt() });
 const num = (v) => (Number.isFinite(v) ? v : 0);
 const NUM_KEYS = ["width", "height", "gap", "margin_top", "margin_bottom", "margin_left", "margin_right"];
 
@@ -62,7 +62,8 @@ export default function App() {
     const front = tpl.image ? await loadImage(new File([tpl.image], tpl.image.name || "modello.png", { type: tpl.image.type })) : null;
     const [width, height] = tpl.size;
     const it = { ...newItem(front), ...tpl.item, width, height };
-    if (it.tag) set({ duplex: true, width, height });
+    if (it.frontTxt.on === undefined) it.frontTxt = { ...it.frontTxt, on: !!it.frontTxt.text?.trim() };
+    if (it.tag) set({ duplex: true });
     setItems((s) => (s.length === 1 && !s[0].front ? [it] : [...s, it]));
     toast.success(`Modello "${tpl.name}" caricato`);
   };
