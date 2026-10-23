@@ -84,14 +84,14 @@ export default function App() {
     if (p.duplex && items.some((it) => !it.back && !it.tag)) return toast.error("Carica il retro di ogni immagine");
     if (!info.total) return toast.error("Nessuna immagine entra nel foglio");
     const fd = new FormData();
-    fd.append("params", JSON.stringify({ ...clean, items: cleanItems.map(({ width, height, copies, fit, shape, outline, tag }) => ({ width, height, copies, shape, outline, fit: tag ? "stretch" : fit })) }));
+    fd.append("params", JSON.stringify({ ...clean, items: cleanItems.map(({ width, height, copies, fit, shape, outline, tag }) => ({ width, height, copies, shape, outline, fit: tag ? "stretch" : fit, hires: !!tag })) }));
     setLoading(true);
     try {
       for (const [i, it] of cleanItems.entries()) {
         if (it.tag) {
           const [w, h] = tileSize(it, clean);
-          fd.append(`front_${i}`, await canvasBlob(await composeTag(it, "front", w, h, p.dpi), `fronte_${i}.png`));
-          if (p.duplex) fd.append(`back_${i}`, await canvasBlob(await composeTag(it, "back", w, h, p.dpi), `retro_${i}.png`));
+          fd.append(`front_${i}`, await canvasBlob(await composeTag(it, "front", w, h, Math.max(p.dpi, 600)), `fronte_${i}.png`));
+          if (p.duplex) fd.append(`back_${i}`, await canvasBlob(await composeTag(it, "back", w, h, Math.max(p.dpi, 600)), `retro_${i}.png`));
         } else {
           fd.append(`front_${i}`, it.front.file);
           if (p.duplex) fd.append(`back_${i}`, it.back.file);

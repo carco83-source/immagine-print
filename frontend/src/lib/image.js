@@ -113,3 +113,50 @@ export async function loadForPrint(file) {
   const clean = await removeCheckerboard(img);
   return clean ? { ...clean, prev: img, op: "bg" } : img;
 }
+
+// Quick enhance: upscale small images, auto-levels, a touch of saturation and an unsharp mask.
+export async function enhanceImage(image) {
+  const k = Math.min(3, Math.max(1, 2400 / Math.max(image.w, image.h)));
+  const w = Math.round(image.w * k), h = Math.round(image.h * k);
+  const cv = document.createElement("canvas");
+  cv.width = w;
+  cv.height = h;
+  const ctx = cv.getContext("2d");
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(image.el, 0, 0, w, h);
+  const data = ctx.getImageData(0, 0, w, h);
+  const d = data.data, n = w * h;
+  const hist = new Uint32Array(256);
+  for (let i = 0; i < d.length; i += 4) hist[(d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29) >> 8]++;
+  let lo = 0, hi = 255, acc = 0;
+  while (lo < 255 && (acc += hist[lo]) < n * 0.005) lo++;
+  acc = 0;
+  while (hi > 0 && (acc += hist[hi]) < n * 0.005) hi--;
+  if (hi - lo < 30) { lo = 0; hi = 255; }
+  const lut = new Uint8ClampedArray(256);
+  for (let v = 0; v < 256; v++) lut[v] = ((v - lo) * 255) / (hi - lo);
+  const src = new Uint8ClampedArray(d.length);
+  for (let i = 0; i < d.length; i += 4) {
+    const r = lut[d[i]], g = lut[d[i + 1]], b = lut[d[i + 2]];
+    const y = 0.299 * r + 0.587 * g + 0.114 * b;
+    src[i] = y + (r - y) * 1.12;
+    src[i + 1] = y + (g - y) * 1.12;
+    src[i + 2] = y + (b - y) * 1.12;
+    src[i + 3] = d[i + 3];
+  }
+  const amt = 0.7;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      if (x === 0 || y === 0 || x === w - 1 || y === h - 1) { d[i] = src[i]; d[i + 1] = src[i + 1]; d[i + 2] = src[i + 2]; continue; }
+      for (let c = 0; c < 3; c++) {
+        const j = i + c;
+        const blur = (src[j - 4] + src[j + 4] + src[j - w * 4] + src[j + w * 4] + src[j] * 4) / 8;
+        d[j] = src[j] + amt * (src[j] - blur);
+      }
+    }
+  }
+  ctx.putImageData(data, 0, 0);
+  const blob = await new Promise((res) => cv.toBlob(res, "image/png"));
+  return loadImage(new File([blob], `migliorata_${image.file.name.replace(/\.\w+$/, "")}.png`, { type: "image/png" }));
+}

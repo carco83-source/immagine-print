@@ -33,6 +33,7 @@ class Item(BaseModel):
     fit: Literal["cover", "contain", "stretch"] = "cover"
     shape: Literal["rect", "round"] = "rect"
     outline: bool = True
+    hires: bool = False
 
 
 class Params(BaseModel):
@@ -146,8 +147,8 @@ def flatten(img: Image.Image):
     return img.convert("RGB")
 
 
-def prepare_tile(img: Image.Image, w_cm, h_cm, fit, p: Params, rotate: bool):
-    size = (max(1, round(w_cm / 2.54 * p.dpi)), max(1, round(h_cm / 2.54 * p.dpi)))
+def prepare_tile(img: Image.Image, w_cm, h_cm, fit, p: Params, rotate: bool, dpi: int):
+    size = (max(1, round(w_cm / 2.54 * dpi)), max(1, round(h_cm / 2.54 * dpi)))
     img = flatten(img)
     if fit == "cover":
         tile = ImageOps.fit(img, size, Image.LANCZOS)
@@ -168,7 +169,9 @@ class TileCache:
         fit = self.p.items[t["idx"]].fit
         key = (id(img), t["w"], t["h"], fit, rotate)
         if key not in self.cache:
-            self.cache[key] = prepare_tile(img, t["w"], t["h"], fit, self.p, rotate)
+            hires = self.p.items[t["idx"]].hires and self.p.format == "pdf"
+            dpi = max(self.p.dpi, 600) if hires else self.p.dpi
+            self.cache[key] = prepare_tile(img, t["w"], t["h"], fit, self.p, rotate, dpi)
         return self.cache[key]
 
 
