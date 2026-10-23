@@ -1,0 +1,32 @@
+{
+  "summary": "Tested the client-side image enhance feature (front and back), how it combines with trim and clear-bg, PDF/PNG/JPG export after enhancing, PDF export of bomboniera tags at 600dpi (hires) and regressions. Backend: 24/24 pytest pass (18 old + 6 new hires tests). Frontend: every requested flow works with no page errors.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verified": [
+    "600x400 -> enhance -> toast 'Immagine migliorata (1800×1200px)', info 1800×1200px, preview src changed, button pink + title 'Annulla miglioramento'; second click restores 600×400 and original src",
+    "Max 3x cap: 500x500 -> 1500x1500; back image 300x200 -> 900x600 (item-0-back-enhance) with undo working",
+    "Enhance then trim -> 1203×723 (the rest of the image stays correct); clear-bg afterwards shows the info toast 'Nessuno sfondo...' with no errors",
+    "Export after enhance: PDF, PNG and multi-image JPG download; duplex PDF with front and back enhanced downloads",
+    "Tag mode + back text -> PDF has 2 pages, embedded images 2126x591 = 9x2.5cm @600dpi",
+    "Backend: hires=true at dpi150 embeds 2008x1299 (600dpi) vs 502x325 without hires; hires is ignored for png; the default is false"
+  ],
+  "test_report_links": ["/app/backend/tests/test_hires.py", "/app/backend/tests/test_generate.py", "/app/backend/tests/test_duplex_sizes.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "The item DPI indicator (e.g. '179 DPI') jumps to ~538 after the upscale enhance. This can mislead users into thinking the image has real print resolution. Consider computing the DPI from the original pixels, or adding a label such as 'interpolata'.",
+    "enhanceImage always encodes to PNG. A 2400px photo can become a 5-15MB upload, so consider JPEG at quality 0.92 for opaque images.",
+    "Enhance steps stack: enhance -> trim -> enhance again re-enhances an already enhanced image, so sharpening and contrast build up. Undo only goes back one step, which is acceptable.",
+    "URL.createObjectURL is never revoked when images are replaced, so memory slowly leaks during long sessions (minor).",
+    "The TileCache key does not include dpi/hires. This is safe today because the key uses id(img) per item, but it is fragile."
+  ],
+  "updated_files": ["/app/backend/tests/test_hires.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Test images are generated with PIL into /tmp/imgs. The enhance testids are item-N-front-enhance and item-N-back-enhance. The back text textarea is item-0-back-txt-textarea (tag mode). The template name input only appears in tag mode, so it was not tested this iteration (it was covered in iteration_5)."
+}

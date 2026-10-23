@@ -90,7 +90,7 @@ export const ItemCard = ({ item, i, p, setP, onSave, update, remove, canRemove }
       </div>
       {dpi && (
         <p data-testid={`${t}-dpi`} className={`mt-2 font-mono text-[10px] ${dpi < 150 ? "text-amber-400" : "text-emerald-400"}`}>
-          {dpi} DPI {dpi < 150 && "— bassa per la stampa"}
+          {dpi} DPI {item.front.op === "enh" && "(migliorata) "}{dpi < 150 && "— bassa per la stampa"}
         </p>
       )}
     </div>

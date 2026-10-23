@@ -26,6 +26,7 @@
 - Formato foglio spostato nella prima scheda sotto il caricamento immagine
 - Modelli salvati (IndexedDB nel browser: immagine, testi, stili, font personalizzati), testo fronte (accanto/sopra), grassetto/corsivo/allineamento
 - Fix: testo retro sempre editor principale, testo fronte attivabile con interruttore; dimensioni diverse per immagine anche in fronte/retro
+- Pulsante "Migliora immagine" (upscale fino a 3x, livelli auto, saturazione, nitidezza; annullabile); testo biglietti composto a 600 dpi e incorporato a 600 dpi nel PDF (hires)
 
 ## Backlog
 - P1: abbondanza (bleed); limite dimensione upload

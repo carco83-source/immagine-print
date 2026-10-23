@@ -157,6 +157,8 @@ export async function enhanceImage(image) {
     }
   }
   ctx.putImageData(data, 0, 0);
-  const blob = await new Promise((res) => cv.toBlob(res, "image/png"));
-  return loadImage(new File([blob], `migliorata_${image.file.name.replace(/\.\w+$/, "")}.png`, { type: "image/png" }));
+  const jpg = image.file.type === "image/jpeg";
+  const type = jpg ? "image/jpeg" : "image/png";
+  const blob = await new Promise((res) => cv.toBlob(res, type, 0.92));
+  return loadImage(new File([blob], `migliorata_${image.file.name.replace(/\.\w+$/, "")}.${jpg ? "jpg" : "png"}`, { type }));
 }
