@@ -1,63 +1,58 @@
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { ImagePlus, X, Crop, Undo2, Eraser, Sparkles } from "lucide-react";
-import { loadForPrint, trimImage, hasCheckerboard, removeCheckerboard, enhanceImage } from "../lib/image";
+import { ImagePlus, X, Pencil, RefreshCw } from "lucide-react";
+import { loadForPrint } from "../lib/image";
+import { ImageEditor } from "./ImageEditor";
 
-export const ImageDrop = ({ label, image, onChange, testid, accent }) => {
+export const ImageDrop = ({ label, image, onChange, testid, accent, aspect, preview }) => {
   const ref = useRef(null);
-  const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(!!image?.fresh);
   const handle = async (file) => {
     if (!file || !file.type.startsWith("image/")) return;
     const img = await loadForPrint(file);
     if (img.op === "bg") toast.success("Sfondo a quadretti/trasparente sostituito con bianco");
     onChange(img);
+    setEditing(true);
   };
-  const run = (op, fn, okMsg, noneMsg) => async (e) => {
-    e.stopPropagation();
-    if (image.op === op) return onChange(image.prev);
-    setBusy(true);
-    const t = await fn(image);
-    setBusy(false);
-    if (!t) return toast.info(noneMsg);
-    onChange({ ...t, prev: image, op });
-    toast.success(okMsg(t));
-  };
-  const trim = run("trim", trimImage, (t) => `Rifilata: ${image.w}×${image.h} → ${t.w}×${t.h}px`, "Nessun bordo da rifilare");
-  const clearBg = run("bg", removeCheckerboard, () => "Sfondo sostituito con bianco", "Nessuno sfondo a quadretti trovato");
-  const enhance = run("enh", enhanceImage, (t) => `Immagine migliorata (${t.w}×${t.h}px)`, "Impossibile migliorare");
-  const btn = (on) => `rounded-sm p-1 transition-colors ${on ? "bg-[#E6007E] text-white" : "bg-black/60 text-slate-300 hover:bg-[#E6007E] hover:text-white"}`;
+  const btn = "rounded-sm bg-black/70 p-1 text-slate-200 transition-colors hover:bg-[#E6007E] hover:text-white";
+  const badge = (
+    <span className="absolute left-1.5 top-1.5 z-10 rounded-sm px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-widest text-white" style={{ background: accent }}>
+      {label}
+    </span>
+  );
+  const input = (
+    <input ref={ref} type="file" accept="image/*" hidden data-testid={`${testid}-input`}
+      onChange={(e) => { handle(e.target.files[0]); e.target.value = ""; }} />
+  );
+
+  if (image && editing)
+    return (
+      <div className="relative col-span-full">
+        {input}
+        <ImageEditor image={image} aspect={aspect} testid={testid}
+          onDone={(img) => { onChange(img.fresh ? { ...img, fresh: false } : img); setEditing(false); }} />
+      </div>
+    );
+
   return (
     <div
       data-testid={`${testid}-dropzone`}
-      onClick={() => ref.current?.click()}
+      onClick={() => !image && ref.current?.click()}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => { e.preventDefault(); handle(e.dataTransfer.files[0]); }}
-      className="group relative flex h-28 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-md border border-dashed border-slate-700 bg-[#0B0F17] transition-colors duration-200 hover:border-slate-400"
+      className={`group relative flex ${image ? "h-60 cursor-default" : "h-28 cursor-pointer"} flex-col items-center justify-center overflow-hidden rounded-md border border-dashed border-slate-700 bg-[#0B0F17] transition-colors duration-200 hover:border-slate-400`}
     >
-      <input ref={ref} type="file" accept="image/*" hidden data-testid={`${testid}-input`}
-        onChange={(e) => { handle(e.target.files[0]); e.target.value = ""; }} />
-      <span className="absolute left-1.5 top-1.5 z-10 rounded-sm px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-widest text-white" style={{ background: accent }}>
-        {label}
-      </span>
+      {input}
+      {badge}
       {image ? (
         <>
-          <img src={image.url} alt={label} className="h-full w-full object-contain p-2 pb-5" />
-          <span data-testid={`${testid}-info`} className="absolute bottom-1 left-2 font-mono text-[9px] text-slate-400">{image.w}×{image.h}px</span>
+          <div data-testid={`${testid}-mini-preview`} className="flex h-full w-full items-center justify-center p-2 pt-7">{preview}</div>
+          <img src={image.url} alt={label} className="absolute bottom-1.5 left-1.5 h-10 w-10 rounded-sm border border-slate-600 bg-black object-cover" />
+          <span data-testid={`${testid}-info`} className="absolute bottom-1 right-2 font-mono text-[9px] text-slate-500">{image.w}×{image.h}px</span>
           <div className="absolute right-1.5 top-1.5 z-10 flex gap-1">
-            <button data-testid={`${testid}-enhance`} onClick={enhance} disabled={busy}
-              title={image.op === "enh" ? "Annulla miglioramento" : "Migliora immagine (nitidezza, contrasto, colori)"} className={btn(image.op === "enh")}>
-              {image.op === "enh" ? <Undo2 size={13} /> : <Sparkles size={13} />}
-            </button>
-            <button data-testid={`${testid}-clear-bg`} onClick={clearBg} disabled={busy}
-              title={image.op === "bg" ? "Ripristina sfondo" : "Rimuovi sfondo a quadretti"} className={btn(image.op === "bg")}>
-              {image.op === "bg" ? <Undo2 size={13} /> : <Eraser size={13} />}
-            </button>
-            <button data-testid={`${testid}-trim`} onClick={trim} disabled={busy}
-              title={image.op === "trim" ? "Annulla rifilatura" : "Rifila bordi"} className={btn(image.op === "trim")}>
-              {image.op === "trim" ? <Undo2 size={13} /> : <Crop size={13} />}
-            </button>
-            <button data-testid={`${testid}-remove`} onClick={(e) => { e.stopPropagation(); onChange(null); }}
-              className="rounded-sm bg-black/60 p-1 text-slate-300 transition-colors hover:bg-red-500 hover:text-white">
+            <button data-testid={`${testid}-edit`} onClick={() => setEditing(true)} title="Modifica (ritaglia, colori, contrasto)" className={btn}><Pencil size={13} /></button>
+            <button data-testid={`${testid}-replace`} onClick={() => ref.current?.click()} title="Sostituisci immagine" className={btn}><RefreshCw size={13} /></button>
+            <button data-testid={`${testid}-remove`} onClick={() => onChange(null)} title="Rimuovi" className="rounded-sm bg-black/70 p-1 text-slate-200 transition-colors hover:bg-red-500 hover:text-white">
               <X size={13} />
             </button>
           </div>

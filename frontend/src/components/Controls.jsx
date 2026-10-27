@@ -5,7 +5,7 @@ import { Section, NumField, Segmented } from "./Field";
 import { ItemCard } from "./ItemCard";
 import { Templates } from "./Templates";
 
-export const Controls = ({ p, set, items, update, remove, addFiles, info, onSaveTemplate, onUseTemplate, tplVersion }) => {
+export const Controls = ({ p, set, items, update, remove, addFiles, info, onSaveTemplate, onUseTemplate, tplVersion, renderMini }) => {
   const ref = useRef(null);
   return (
     <>
@@ -17,7 +17,7 @@ export const Controls = ({ p, set, items, update, remove, addFiles, info, onSave
       }>
         <div className="space-y-3">
           {items.map((it, i) => (
-            <ItemCard key={it.id} item={it} i={i} p={p} setP={set} onSave={onSaveTemplate} update={update} remove={remove} canRemove={items.length > 1} />
+            <ItemCard key={it.id} item={it} i={i} p={p} setP={set} onSave={onSaveTemplate} renderMini={renderMini} update={update} remove={remove} canRemove={items.length > 1} />
           ))}
         </div>
         <input ref={ref} type="file" accept="image/*" multiple hidden data-testid="add-images-input"

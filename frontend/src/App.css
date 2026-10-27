@@ -22,6 +22,9 @@ body {
 .sheet {
   box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
+.edit-slider > span:first-child { background: #334155; }
+.edit-slider > span:first-child > span { background: #E6007E; }
+.edit-slider [role="slider"] { background: #fff; border-color: #E6007E; }
 .sheet-enter {
   animation: sheetIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }

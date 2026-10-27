@@ -6,7 +6,7 @@ import { PassportPresets, QuickFormats } from "./PassportPresets";
 import { capacity, tileSize, SHEETS } from "../lib/layout";
 import { TagToggle, TagText } from "./TagPanel";
 
-export const ItemCard = ({ item, i, p, setP, onSave, update, remove, canRemove }) => {
+export const ItemCard = ({ item, i, p, setP, onSave, renderMini, update, remove, canRemove }) => {
   const t = `item-${i}`;
   const set = (patch) => update(item.id, patch);
   const ratio = item.front ? item.front.h / item.front.w : null;
@@ -28,10 +28,10 @@ export const ItemCard = ({ item, i, p, setP, onSave, update, remove, canRemove }
         )}
       </div>
       <div className={`grid gap-2 ${p.duplex ? "grid-cols-2" : "grid-cols-1"}`}>
-        <ImageDrop label="Fronte" image={item.front} onChange={(v) => set({ front: v })} testid={`${t}-front`} accent="#2563EB" />
-        {p.duplex && !item.tag && <ImageDrop label="Retro" image={item.back} onChange={(v) => set({ back: v })} testid={`${t}-back`} accent="#9333EA" />}
+        <ImageDrop label="Fronte" image={item.front} onChange={(v) => set({ front: v })} testid={`${t}-front`} accent="#2563EB" aspect={item.width / item.height} preview={renderMini("front", i)} />
+        {p.duplex && !item.tag && <ImageDrop label="Retro" image={item.back} onChange={(v) => set({ back: v })} testid={`${t}-back`} accent="#9333EA" aspect={item.width / item.height} preview={renderMini("back", i)} />}
         {p.duplex && item.tag && (
-          <div data-testid={`${t}-back-text-slot`} className="flex h-28 items-center justify-center rounded-md border border-dashed border-[#9333EA]/40 bg-[#0B0F17] px-2 text-center text-[10px] text-purple-300">
+          <div data-testid={`${t}-back-text-slot`} className="flex h-28 items-center justify-center self-start rounded-md border border-dashed border-[#9333EA]/40 bg-[#0B0F17] px-2 text-center text-[10px] text-purple-300">
             Retro: testo a destra (vedi sotto)
           </div>
         )}

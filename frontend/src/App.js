@@ -23,7 +23,7 @@ const DEFAULTS = {
 };
 
 let uid = 0;
-const newItem = (front = null) => ({ id: ++uid, front, back: null, copies: 1, width: 8.5, height: 5.5, fit: "cover", shape: "rect", outline: true, tag: false, frontTxt: newTxt({ pos: "left", on: false }), backTxt: newTxt() });
+const newItem = (front = null) => ({ id: ++uid, front, back: null, copies: 1, width: 10, height: 15, fit: "cover", shape: "rect", outline: true, tag: false, frontTxt: newTxt({ pos: "left", on: false }), backTxt: newTxt() });
 const num = (v) => (Number.isFinite(v) ? v : 0);
 const NUM_KEYS = ["width", "height", "gap", "margin_top", "margin_bottom", "margin_left", "margin_right"];
 
@@ -40,7 +40,7 @@ export default function App() {
     const imgs = await Promise.all(files.filter((f) => f.type.startsWith("image/")).map(loadForPrint));
     if (imgs.some((i) => i.op === "bg")) toast.success("Sfondo a quadretti/trasparente sostituito con bianco");
     if (!imgs.length) return;
-    const fresh = imgs.map((img) => newItem(img));
+    const fresh = imgs.map((img) => newItem({ ...img, fresh: true }));
     setItems((s) => (s.length === 1 && !s[0].front ? fresh : [...s, ...fresh]));
   };
 
@@ -78,6 +78,10 @@ export default function App() {
   const page = Math.min(pageIdx, Math.max(0, info.pages.length - 1));
   const showBack = p.duplex && view === "back";
   const tagUrls = useTagPreviews(cleanItems, clean);
+  const renderMini = (side, i) => {
+    const pg = Math.max(0, info.pages.findIndex((pp) => pp.some((t) => t.idx === i)));
+    return <SheetPreview info={info} page={info.pages[pg] || []} p={clean} items={items} side={side} tagUrls={tagUrls} uid={`mini-${i}`} />;
+  };
 
   const onExport = async () => {
     if (items.some((it) => !it.front)) return toast.error("Carica il fronte di ogni immagine");
@@ -129,7 +133,7 @@ export default function App() {
 
       <div className="flex flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
         <aside className="flex w-full shrink-0 flex-col border-r border-slate-800 bg-[#111827] lg:w-[440px] lg:overflow-y-auto">
-          <Controls {...{ p, set, items, update, remove, addFiles, info, onSaveTemplate, onUseTemplate, tplVersion }} />
+          <Controls {...{ p, set, items, update, remove, addFiles, info, onSaveTemplate, onUseTemplate, tplVersion, renderMini }} />
           <ExportBar p={p} set={set} onExport={onExport} loading={loading} disabled={!items.some((it) => it.front)} />
         </aside>
 

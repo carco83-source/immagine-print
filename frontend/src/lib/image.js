@@ -162,3 +162,31 @@ export async function enhanceImage(image) {
   const blob = await new Promise((res) => cv.toBlob(res, type, 0.92));
   return loadImage(new File([blob], `migliorata_${image.file.name.replace(/\.\w+$/, "")}.${jpg ? "jpg" : "png"}`, { type }));
 }
+
+// Applies crop (percent of image) and brightness/contrast/saturation (-100..100) to a new image.
+export async function applyEdits(image, crop, adj) {
+  const sx = crop ? Math.round((crop.x / 100) * image.w) : 0, sy = crop ? Math.round((crop.y / 100) * image.h) : 0;
+  const w = crop ? Math.max(1, Math.round((crop.width / 100) * image.w)) : image.w;
+  const h = crop ? Math.max(1, Math.round((crop.height / 100) * image.h)) : image.h;
+  const cv = document.createElement("canvas");
+  cv.width = w;
+  cv.height = h;
+  const ctx = cv.getContext("2d");
+  ctx.drawImage(image.el, sx, sy, w, h, 0, 0, w, h);
+  const b = 1 + adj.brightness / 100, c = 1 + adj.contrast / 100, sat = 1 + adj.saturation / 100;
+  if (b !== 1 || c !== 1 || sat !== 1) {
+    const data = ctx.getImageData(0, 0, w, h);
+    const d = data.data;
+    for (let i = 0; i < d.length; i += 4) {
+      let r = d[i] * b, g = d[i + 1] * b, bl = d[i + 2] * b;
+      r = (r - 128) * c + 128; g = (g - 128) * c + 128; bl = (bl - 128) * c + 128;
+      const y = 0.299 * r + 0.587 * g + 0.114 * bl;
+      d[i] = y + (r - y) * sat; d[i + 1] = y + (g - y) * sat; d[i + 2] = y + (bl - y) * sat;
+    }
+    ctx.putImageData(data, 0, 0);
+  }
+  const jpg = image.file.type === "image/jpeg";
+  const type = jpg ? "image/jpeg" : "image/png";
+  const blob = await new Promise((res) => cv.toBlob(res, type, 0.92));
+  return loadImage(new File([blob], `modificata_${image.file.name.replace(/\.\w+$/, "")}.${jpg ? "jpg" : "png"}`, { type }));
+}

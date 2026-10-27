@@ -2,14 +2,15 @@ import { backTiles, cutLines, innerCrosses } from "../lib/layout";
 
 const ASPECT = { cover: "xMidYMid slice", contain: "xMidYMid meet", stretch: "none" };
 
-export const SheetPreview = ({ info, page, p, items, side, tagUrls = {} }) => {
+export const SheetPreview = ({ info, page, p, items, side, tagUrls = {}, uid = "" }) => {
+  const tid = (x) => (uid ? undefined : x);
   const isBack = side === "back";
   const { W, H } = info;
   const tiles = isBack ? backTiles(page, W, H, p) : page;
   const rotate = isBack && p.flip === "short";
   return (
-    <svg data-testid={`sheet-preview-${side}`} viewBox={`0 0 ${W} ${H}`}
-      className="sheet h-full max-h-full w-auto max-w-full bg-white" style={{ aspectRatio: `${W} / ${H}` }}>
+    <svg data-testid={uid ? `${uid}-${side}` : `sheet-preview-${side}`} viewBox={`0 0 ${W} ${H}`}
+      className={`${uid ? "" : "sheet "}h-full max-h-full w-auto max-w-full bg-white`} style={{ aspectRatio: `${W} / ${H}` }}>
       <rect x={p.margin_left} y={p.margin_top}
         width={Math.max(0, W - p.margin_left - p.margin_right)} height={Math.max(0, H - p.margin_top - p.margin_bottom)}
         fill="none" stroke="#00A8E8" strokeWidth={0.03} strokeDasharray="0.2 0.15" />
@@ -21,11 +22,11 @@ export const SheetPreview = ({ info, page, p, items, side, tagUrls = {} }) => {
         return (
           <g key={i} transform={rotate ? `rotate(180 ${t.x + t.w / 2} ${t.y + t.h / 2})` : undefined}>
             {round && (
-              <clipPath id={`clip-${side}-${i}`}>
+              <clipPath id={`clip-${uid}${side}-${i}`}>
                 <ellipse cx={t.x + t.w / 2} cy={t.y + t.h / 2} rx={t.w / 2} ry={t.h / 2} />
               </clipPath>
             )}
-            <g clipPath={round ? `url(#clip-${side}-${i})` : undefined}>
+            <g clipPath={round ? `url(#clip-${uid}${side}-${i})` : undefined}>
               {img ? (
                 <image href={img.url} x={t.x} y={t.y} width={t.w} height={t.h} preserveAspectRatio={tagUrl ? "none" : ASPECT[it.fit]} />
               ) : (
@@ -33,7 +34,7 @@ export const SheetPreview = ({ info, page, p, items, side, tagUrls = {} }) => {
               )}
             </g>
             {round ? (
-              <ellipse data-testid={!isBack && items[t.idx]?.outline ? `outline-${i}` : undefined} cx={t.x + t.w / 2} cy={t.y + t.h / 2} rx={t.w / 2} ry={t.h / 2} fill="none"
+              <ellipse data-testid={tid(!isBack && items[t.idx]?.outline ? `outline-${i}` : undefined)} cx={t.x + t.w / 2} cy={t.y + t.h / 2} rx={t.w / 2} ry={t.h / 2} fill="none"
                 stroke={!isBack && items[t.idx]?.outline ? "#000" : "#94A3B8"} strokeWidth={!isBack && items[t.idx]?.outline ? 0.03 : 0.015} />
             ) : (
               <rect x={t.x} y={t.y} width={t.w} height={t.h} fill="none" stroke="#94A3B8" strokeWidth={0.015} />
@@ -48,7 +49,7 @@ export const SheetPreview = ({ info, page, p, items, side, tagUrls = {} }) => {
         cutLines(page).map(([x1, y1, x2, y2], i) => <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#000" strokeWidth={0.025} />)}
       {!isBack && p.cut_marks && ["#fff", "#000"].map((c, k) =>
         innerCrosses(page).map(([x1, y1, x2, y2], i) => (
-          <line key={`${k}-${i}`} data-testid={k ? `inner-cross-${i}` : undefined} x1={x1} y1={y1} x2={x2} y2={y2} stroke={c} strokeWidth={k ? 0.025 : 0.075} />
+          <line key={`${k}-${i}`} data-testid={tid(k ? `inner-cross-${i}` : undefined)} x1={x1} y1={y1} x2={x2} y2={y2} stroke={c} strokeWidth={k ? 0.025 : 0.075} />
         )))}
     </svg>
   );
