@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
@@ -23,6 +23,9 @@ export const ImageEditor = ({ image, aspect, testid, onDone }) => {
   const [adj, setAdj] = useState(ADJ0);
   const [busy, setBusy] = useState(false);
   const imgAspect = work.w / work.h;
+  useEffect(() => {
+    setCrop((c) => (c && lock ? centered(aspect, work.w / work.h) : c));
+  }, [aspect]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const op = (fn, ok, none) => async () => {
     setBusy(true);

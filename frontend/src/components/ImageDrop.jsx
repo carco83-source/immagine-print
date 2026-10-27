@@ -14,7 +14,7 @@ export const ImageDrop = ({ label, image, onChange, testid, accent, aspect, prev
     onChange(img);
     setEditing(true);
   };
-  const btn = "rounded-sm bg-black/70 p-1 text-slate-200 transition-colors hover:bg-[#E6007E] hover:text-white";
+  const btn = "rounded-md bg-black/70 p-2 text-slate-200 transition-colors hover:bg-[#E6007E] hover:text-white";
   const badge = (
     <span className="absolute left-1.5 top-1.5 z-10 rounded-sm px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-widest text-white" style={{ background: accent }}>
       {label}
@@ -46,13 +46,12 @@ export const ImageDrop = ({ label, image, onChange, testid, accent, aspect, prev
       {badge}
       {image ? (
         <>
-          <div data-testid={`${testid}-mini-preview`} className="flex h-full w-full items-center justify-center p-2 pt-7">{preview}</div>
-          <img src={image.url} alt={label} className="absolute bottom-1.5 left-1.5 h-10 w-10 rounded-sm border border-slate-600 bg-black object-cover" />
-          <span data-testid={`${testid}-info`} className="absolute bottom-1 right-2 font-mono text-[9px] text-slate-500">{image.w}×{image.h}px</span>
+          <div data-testid={`${testid}-mini-preview`} className="flex h-full w-full items-center justify-center p-2 pb-4 pt-10">{preview}</div>
+          <span data-testid={`${testid}-info`} className="absolute bottom-1 left-0 right-0 truncate text-center font-mono text-[9px] text-slate-500">{image.w}×{image.h}px</span>
           <div className="absolute right-1.5 top-1.5 z-10 flex gap-1">
             <button data-testid={`${testid}-edit`} onClick={() => setEditing(true)} title="Modifica (ritaglia, colori, contrasto)" className={btn}><Pencil size={13} /></button>
             <button data-testid={`${testid}-replace`} onClick={() => ref.current?.click()} title="Sostituisci immagine" className={btn}><RefreshCw size={13} /></button>
-            <button data-testid={`${testid}-remove`} onClick={() => onChange(null)} title="Rimuovi" className="rounded-sm bg-black/70 p-1 text-slate-200 transition-colors hover:bg-red-500 hover:text-white">
+            <button data-testid={`${testid}-remove`} onClick={() => onChange(null)} title="Rimuovi" className="rounded-md bg-black/70 p-2 text-slate-200 transition-colors hover:bg-red-500 hover:text-white">
               <X size={13} />
             </button>
           </div>

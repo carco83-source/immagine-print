@@ -1,0 +1,40 @@
+{
+  "summary": "Frontend-only testing of the in-box image editor (crop, brightness/contrast/saturation, enhance/clear-bg/trim/reset, Fine) and the live mini sheet preview in the dropzone. Tested on desktop at 1920x1080 and on mobile at 390x844. Every requested flow works and there were zero page errors. Regressions also pass: duplex, tag mode, template save, and PDF/PNG export.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "ImageDrop loaded box (duplex half-width, desktop 440px sidebar)", "issues": ["The 40x40 thumbnail at bottom-left overlaps the mini sheet. The 'WxHpx' info label at bottom-right overflows the box edge when the box is narrow (e.g. '800×1000px' sticks out past the front box in duplex)."]},
+      {"screen": "Mobile 390px", "issues": ["The edit/replace/remove buttons on the loaded box are only 21x21px. That is below the recommended 44px touch target for smartphone use."]}
+    ]
+  },
+  "verified": [
+    "New item size defaults to 10x15. On upload (add-images-input and item-0-front-input) the editor opens automatically with editor-img, crop-toggle, enhance, clear-bg, trim, reset, 3 sliders and done",
+    "Crop 'Come formato' selection ratio is 0.6667 (10/15). Fine turns 800x1000 into 600x900. 'Libero' plus dragging the se handle gives a ratio of 1.235, producing 619x501",
+    "The brightness slider (keyboard +30) gives a live CSS filter of brightness(1.3), and it is baked into the output (lighter tile in the preview). Saturation 80 on mobile is also baked in",
+    "The mini-0-front svg appears in item-0-front-mini-preview. Changing size to 5x5 updates the tile width attribute to 5. Foglio pieno gives 15 tiles, A3 changes the viewBox to 29.7x42, and copies+1 gives 16 tiles. All of these update live",
+    "item-0-front-edit reopens the editor at 619x501. Originale restores 800x1000 and that persists after Fine. Replace opens the file chooser and the editor reopens with 600x400. Remove brings back 'Trascina o clicca'",
+    "Duplex: the back editor spans the full width (365px vs the 178px front box), and mini-0-back is rendered. sheet-preview-front is unique, and outline-/inner-cross- testids are not present in the mini previews",
+    "Mobile 390x844: no horizontal overflow (scrollWidth is 390) in the editor, mini and duplex states",
+    "Regression: duplex PDF, PNG and tag-mode PDF all download. Tag mode sets 9x2.5 and hides the back dropzone. Template save TEST_tpl creates 1 template"
+  ],
+  "test_report_links": [],
+  "action_items": [
+    "(Minor) Move or shrink the bottom-left thumbnail and the px label in the loaded box so they don't overlap the mini sheet or overflow in duplex half-width",
+    "(Minor) Enlarge the edit/replace/remove tap targets on mobile (at least about 32-44px)"
+  ],
+  "critical_code_review_comments": [
+    "ImageEditor: if item width/height change while the editor is open with 'Come formato', the aspect prop changes but the existing crop is not re-centered. The crop can stay at the old ratio until the user drags it. Consider re-running centered() in a useEffect on [aspect].",
+    "The main sheet preview does not reflect live slider or crop changes while the editor is open (only after Fine). This is acceptable, but users might expect it.",
+    "Originale resets to image.orig. For images auto-cleaned by loadForPrint (op 'bg'), orig is the cleaned version, not the raw upload (the raw one is kept in .prev).",
+    "DEFAULTS in App.js still contains width 8.5 / height 5.5. It is unused for items (newItem uses 10x15) but may confuse; remove it if it is dead.",
+    "URL.createObjectURL leaks on each edit or replace (it is never revoked)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "100%"},
+  "seed_data_creation": "Test images were generated with PIL: /tmp/imgs/a.jpg (800x1000), /tmp/imgs/b.jpg (600x400). A template TEST_tpl was saved in IndexedDB (browser-local).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "The editor testids are item-N-{front|back}-{editor,editor-img,info,crop-toggle,crop-format,crop-free,enhance,clear-bg,trim,reset,done,brightness,contrast,saturation}. The sliders are radix; use the [role=slider] child plus the arrow keys. The ReactCrop handles are .ReactCrop__drag-handle.ord-se. The loaded box exposes -dropzone, -mini-preview, -edit, -replace and -remove. The mini svg is mini-N-{side}."
+}
