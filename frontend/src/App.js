@@ -23,7 +23,7 @@ const DEFAULTS = {
 };
 
 let uid = 0;
-const newItem = (front = null) => ({ id: ++uid, front, back: null, copies: 1, width: 10, height: 15, fit: "cover", shape: "rect", outline: true, tag: false, frontTxt: newTxt({ pos: "left", on: false }), backTxt: newTxt() });
+const newItem = (front = null) => ({ id: ++uid, front, back: null, copies: 1, width: 9.5, height: 13.5, fit: "cover", shape: "rect", outline: true, tag: false, frontTxt: newTxt({ pos: "left", on: false }), backTxt: newTxt() });
 const num = (v) => (Number.isFinite(v) ? v : 0);
 const NUM_KEYS = ["width", "height", "gap", "margin_top", "margin_bottom", "margin_left", "margin_right"];
 
