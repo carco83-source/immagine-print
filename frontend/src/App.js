@@ -10,7 +10,7 @@ import { SheetPreview } from "./components/SheetPreview";
 import { computePages } from "./lib/layout";
 import { loadForPrint, loadImage } from "./lib/image";
 import { composeTag, canvasBlob, newTxt, customFontNames, restoreFonts } from "./lib/tag";
-import { saveTemplate } from "./lib/db";
+import { saveTemplate, saveWork } from "./lib/db";
 import { useTagPreviews } from "./lib/useTagPreviews";
 import { tileSize } from "./lib/layout";
 
@@ -24,6 +24,14 @@ const DEFAULTS = {
 
 let uid = 0;
 const newItem = (front = null) => ({ id: ++uid, front, back: null, copies: 1, width: 9.5, height: 13.5, fit: "cover", shape: "rect", outline: true, tag: false, frontTxt: newTxt({ pos: "left", on: false }), backTxt: newTxt() });
+const thumbOf = (img) => {
+  const cv = document.createElement("canvas");
+  const k = 120 / Math.max(img.w, img.h);
+  cv.width = Math.round(img.w * k);
+  cv.height = Math.round(img.h * k);
+  cv.getContext("2d").drawImage(img.el, 0, 0, cv.width, cv.height);
+  return cv.toDataURL("image/jpeg", 0.7);
+};
 const num = (v) => (Number.isFinite(v) ? v : 0);
 const NUM_KEYS = ["width", "height", "gap", "margin_top", "margin_bottom", "margin_left", "margin_right"];
 
@@ -40,7 +48,7 @@ export default function App() {
     const imgs = await Promise.all(files.filter((f) => f.type.startsWith("image/")).map(loadForPrint));
     if (imgs.some((i) => i.op === "bg")) toast.success("Sfondo a quadretti/trasparente sostituito con bianco");
     if (!imgs.length) return;
-    const fresh = imgs.map((img) => newItem({ ...img, fresh: true }));
+    const fresh = imgs.map((img) => newItem(img));
     setItems((s) => (s.length === 1 && !s[0].front ? fresh : [...s, ...fresh]));
   };
 
@@ -56,6 +64,27 @@ export default function App() {
     });
     setTplVersion((v) => v + 1);
     toast.success(`Modello "${name}" salvato`);
+  };
+  const onSaveWork = async () => {
+    const name = window.prompt("Nome del lavoro", `Lavoro ${new Date().toLocaleString("it-IT", { dateStyle: "short", timeStyle: "short" })}`);
+    if (!name?.trim()) return;
+    const fonts = customFontNames(items.flatMap((it) => [it.frontTxt.font, it.backTxt.font]));
+    const first = items.find((it) => it.front);
+    await saveWork({
+      name: name.trim(), created: new Date().toISOString(), p, fonts, thumb: first ? thumbOf(first.front) : null,
+      items: items.map(({ front, back, ...rest }) => ({ ...rest, front: front?.file || null, back: back?.file || null })),
+    });
+    setTplVersion((v) => v + 1);
+    toast.success(`Lavoro "${name.trim()}" salvato`);
+  };
+  const onOpenWork = async (w) => {
+    await restoreFonts(w.fonts || []);
+    const load = (f) => (f ? loadImage(new File([f], f.name || "immagine.png", { type: f.type })) : null);
+    const restored = await Promise.all(w.items.map(async (it) => ({ ...it, id: ++uid, front: await load(it.front), back: await load(it.back) })));
+    setP({ ...DEFAULTS, ...w.p });
+    setItems(restored.length ? restored : [newItem()]);
+    setPageIdx(0);
+    toast.success(`Lavoro "${w.name}" aperto`);
   };
   const onUseTemplate = async (tpl) => {
     await restoreFonts(tpl.fonts || []);
@@ -133,8 +162,8 @@ export default function App() {
 
       <div className="flex flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
         <aside className="flex w-full shrink-0 flex-col border-r border-slate-800 bg-[#111827] lg:w-[440px] lg:overflow-y-auto">
-          <Controls {...{ p, set, items, update, remove, addFiles, info, onSaveTemplate, onUseTemplate, tplVersion, renderMini }} />
-          <ExportBar p={p} set={set} onExport={onExport} loading={loading} disabled={!items.some((it) => it.front)} />
+          <Controls {...{ p, set, items, update, remove, addFiles, info, onSaveTemplate, onUseTemplate, tplVersion, renderMini, onOpenWork }} />
+          <ExportBar p={p} set={set} onExport={onExport} onSave={onSaveWork} loading={loading} disabled={!items.some((it) => it.front)} />
         </aside>
 
         <main className="workbench relative flex flex-1 flex-col overflow-hidden">

@@ -4,8 +4,9 @@ import { Switch } from "./ui/switch";
 import { Section, NumField, Segmented } from "./Field";
 import { ItemCard } from "./ItemCard";
 import { Templates } from "./Templates";
+import { Works } from "./Works";
 
-export const Controls = ({ p, set, items, update, remove, addFiles, info, onSaveTemplate, onUseTemplate, tplVersion, renderMini }) => {
+export const Controls = ({ p, set, items, update, remove, addFiles, info, onSaveTemplate, onUseTemplate, tplVersion, renderMini, onOpenWork }) => {
   const ref = useRef(null);
   return (
     <>
@@ -57,6 +58,7 @@ export const Controls = ({ p, set, items, update, remove, addFiles, info, onSave
         )}
       </Section>
       <Templates version={tplVersion} onUse={onUseTemplate} />
+      <Works version={tplVersion} onOpen={onOpenWork} />
     </>
   );
 };
