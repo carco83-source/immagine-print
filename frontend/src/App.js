@@ -70,10 +70,14 @@ export default function App() {
     if (!name?.trim()) return;
     const fonts = customFontNames(items.flatMap((it) => [it.frontTxt.font, it.backTxt.font]));
     const first = items.find((it) => it.front);
-    await saveWork({
-      name: name.trim(), created: new Date().toISOString(), p, fonts, thumb: first ? thumbOf(first.front) : null,
-      items: items.map(({ front, back, ...rest }) => ({ ...rest, front: front?.file || null, back: back?.file || null })),
-    });
+    try {
+      await saveWork({
+        name: name.trim(), created: new Date().toISOString(), p, fonts, thumb: first ? thumbOf(first.front) : null,
+        items: items.map(({ front, back, ...rest }) => ({ ...rest, front: front?.file || null, back: back?.file || null })),
+      });
+    } catch {
+      return toast.error("Impossibile salvare: spazio del browser esaurito");
+    }
     setTplVersion((v) => v + 1);
     toast.success(`Lavoro "${name.trim()}" salvato`);
   };

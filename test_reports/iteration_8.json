@@ -1,0 +1,27 @@
+{
+  "summary": "Frontend-only test of optional image editing + Save/Open/Delete work (IndexedDB v2). All requested features pass. Upload (single + multi) does not open editor, image used as-is (800x1100 stays 800x1100, no enhance). 'Modifica' button opens editor; Fine closes and applies (trim 800x1100->704x1004). Save button disabled with no images, prompt default 'Lavoro 29/10/26, 09:41', toast + work-1 entry with thumbnail, name, '3 immagini · A3', date. After page.reload, work persisted; Open restored A3 landscape, margin 1.7, gap 0.3, duplex, 3 items with front/back images (same px sizes), sizes 9x2.5 (tag)/7x5/9.5x13.5, copies 3, round+contain, tag switch + back tag text – zero diffs vs. pre-save state. Delete asks confirm and shows works-empty. Templates (section 4) save/persist/use still work. PDF export downloaded stampa_A3_oriz.pdf. Default item size 9.5x13.5 confirmed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Item card with Fronte/Retro (duplex, 2 dropzones side by side)", "issues": ["The pink 'Modifica' button + replace/remove buttons overlap the FRONTE/RETRO badge in the top-left (badge truncated to 'FRO'/'RET'). Consider icon-only Modifica in narrow boxes or moving the action buttons to the bottom."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Minor: fix overlap of Modifica button with FRONTE/RETRO badge in duplex layout",
+    "Minor: wrap onSaveWork/onOpenWork in try/catch and toast.error on IndexedDB failure (e.g., quota exceeded with many large images)"
+  ],
+  "critical_code_review_comments": [
+    "onSaveWork/onOpenWork have no error handling; an IndexedDB rejection (quota) leaves the user without feedback",
+    "Console warning '<span> cannot be a child of <option>' comes from visual-edit tooling injection in ExportBar dpi select, not app code",
+    "IndexedDB v1->v2 upgrade logic uses objectStoreNames.contains checks - safe; verified only via code review (test contexts start fresh)"
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "100%"},
+  "seed_data_creation": "None persisted (browser contexts are ephemeral; test work deleted)",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Browser automation contexts are fresh each call, so save+reload+open must be done in one script. Use page.on('dialog') to accept prompt/confirm. Work testids: work-{id}, work-{id}-open, work-{id}-delete, works-empty, save-work-btn. Test images created in /tmp/imgs (a.jpg 800x1100, b.jpg 1000x700, c.jpg 600x600) via PIL."
+}

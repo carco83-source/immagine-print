@@ -29,6 +29,7 @@
 - Pulsante "Migliora immagine" (upscale fino a 3x, livelli auto, saturazione, nitidezza; annullabile); testo biglietti composto a 600 dpi e incorporato a 600 dpi nel PDF (hires)
 - Editor immagine nel riquadro (ritaglio libero/come formato, luminosità/contrasto/saturazione, migliora, sfondo, rifila, originale) + "Fine" → mini anteprima foglio live nel riquadro; formato predefinito 10×15
 - Formato predefinito immagini 9,5×13,5; esempio con 5 foto utente in /esempi/foto_9.5x13.5.pdf
+- Editor solo opzionale (pulsante Modifica), foto caricata usata così com'è; pulsante "Salva" lavoro completo + sezione 5 "Lavori salvati" (IndexedDB v2 store works)
 
 ## Backlog
 - P1: abbondanza (bleed); limite dimensione upload
