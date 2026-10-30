@@ -1,4 +1,5 @@
-import { Minus, Plus, Trash2, Wand2, Maximize } from "lucide-react";
+import { useState } from "react";
+import { Minus, Plus, Trash2, Wand2, Maximize, ChevronDown } from "lucide-react";
 import { ImageDrop } from "./ImageDrop";
 import { NumField, FitSelect, Segmented } from "./Field";
 import { Switch } from "./ui/switch";
@@ -9,6 +10,7 @@ import { DecoPanel } from "./DecoPanel";
 
 export const ItemCard = ({ item, i, p, setP, onSave, renderMini, update, remove, canRemove }) => {
   const t = `item-${i}`;
+  const [more, setMore] = useState(false);
   const set = (patch) => update(item.id, patch);
   const ratio = item.front ? item.front.h / item.front.w : null;
   const [w] = tileSize(item, p);
@@ -48,7 +50,6 @@ export const ItemCard = ({ item, i, p, setP, onSave, renderMini, update, remove,
           </div>
         </div>
       )}
-      <TagToggle item={item} t={t} set={set} setP={setP} />
       <div className="mt-3">
         <span className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-slate-500">Forma</span>
         <Segmented testid={`${t}-shape`} value={item.shape} onChange={(v) => set({ shape: v })}
@@ -70,10 +71,6 @@ export const ItemCard = ({ item, i, p, setP, onSave, renderMini, update, remove,
           </button>
         </div>
       <FitSelect testid={`${t}-fit`} value={item.fit} onChange={(v) => set({ fit: v })} />
-      {item.tag && <TagText item={item} t={t} set={set} p={p} onSave={onSave} />}
-      <DecoPanel item={item} t={t} set={set} duplex={p.duplex} />
-      <PassportPresets testid={`${t}-passport`} current={[sz.width, sz.height]} onApply={(width, height) => setSize({ width, height })} />
-      <QuickFormats testid={`${t}-quick`} current={[sz.width, sz.height]} onApply={(width, height) => setSize({ width, height })} />
       <div className="mt-3 flex items-end gap-2">
         <div>
           <span className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-slate-500">Copie</span>
@@ -90,6 +87,19 @@ export const ItemCard = ({ item, i, p, setP, onSave, renderMini, update, remove,
           <Maximize size={12} /> Foglio pieno
         </button>
       </div>
+      <div data-testid={`${t}-formats`} className="mt-3 rounded-md border border-slate-800 bg-[#0B0F17]/60 p-2.5">
+        <span className="block text-[10px] font-medium uppercase tracking-wider text-[#FFD100]">Formati rapidi</span>
+        <TagToggle item={item} t={t} set={set} setP={setP} />
+        <PassportPresets testid={`${t}-passport`} current={[sz.width, sz.height]} onApply={(width, height) => setSize({ width, height })} />
+        <button data-testid={`${t}-more-formats-toggle`} onClick={() => setMore(!more)}
+          className="mt-3 flex w-full items-center justify-between rounded-md border border-slate-800 px-3 py-2 text-[11px] text-slate-300 transition-colors hover:border-slate-500">
+          Altri formati (biglietti da visita, cartoline, inviti…)
+          <ChevronDown size={14} className={`transition-transform ${more ? "rotate-180" : ""}`} />
+        </button>
+        {more && <QuickFormats testid={`${t}-quick`} current={[sz.width, sz.height]} onApply={(width, height) => setSize({ width, height })} />}
+      </div>
+      {item.tag && <TagText item={item} t={t} set={set} p={p} onSave={onSave} />}
+      <DecoPanel item={item} t={t} set={set} duplex={p.duplex} />
       {dpi && (
         <p data-testid={`${t}-dpi`} className={`mt-2 font-mono text-[10px] ${dpi < 150 ? "text-amber-400" : "text-emerald-400"}`}>
           {dpi} DPI {item.front.op === "enh" && "(migliorata) "}{dpi < 150 && "— bassa per la stampa"}

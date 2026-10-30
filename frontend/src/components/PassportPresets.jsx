@@ -78,5 +78,5 @@ export const PassportPresets = ({ testid, current, onApply }) => (
 );
 
 export const QuickFormats = ({ testid, current, onApply }) => (
-  <PresetGroup testid={testid} title="Formati rapidi" icon={LayoutTemplate} presets={QUICK} cols={3} current={current} onApply={onApply} />
+  <PresetGroup testid={testid} title="Biglietti, cartoline, inviti" icon={LayoutTemplate} presets={QUICK} cols={3} current={current} onApply={onApply} />
 );
