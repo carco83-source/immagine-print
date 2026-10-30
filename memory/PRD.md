@@ -31,6 +31,7 @@
 - Formato predefinito immagini 9,5×13,5; esempio con 5 foto utente in /esempi/foto_9.5x13.5.pdf
 - Editor solo opzionale (pulsante Modifica), foto caricata usata così com'è; pulsante "Salva" lavoro completo + sezione 5 "Lavori salvati" (IndexedDB v2 store works)
 - Testi, forme (rettangolo/quadrato, ovale/cerchio) e colore sfondo per fronte e retro (lib/deco.js, DecoPanel), composti lato client a 600 dpi
+- Colore linee di taglio (p.cut_color, anche contorni ovali), 4 colori rapidi + selettore
 
 ## Backlog
 - P1: abbondanza (bleed); limite dimensione upload

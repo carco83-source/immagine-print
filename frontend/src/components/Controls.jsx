@@ -49,6 +49,17 @@ export const Controls = ({ p, set, items, update, remove, addFiles, info, onSave
           <span>Segni di taglio <span className="text-slate-500">(solo fronte)</span></span>
           <Switch data-testid="cut-marks-switch" checked={p.cut_marks} onCheckedChange={(v) => set({ cut_marks: v })} />
         </label>
+        <div className="mt-3 flex items-center justify-between text-xs text-slate-300">
+          <span>Colore linee di taglio <span className="text-slate-500">(anche contorni)</span></span>
+          <div className="flex items-center gap-1.5">
+            {["#000000", "#E6007E", "#00A8E8", "#9CA3AF"].map((c) => (
+              <button key={c} data-testid={`cut-color-${c.slice(1)}`} onClick={() => set({ cut_color: c })} title={c}
+                className={`h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${p.cut_color.toUpperCase() === c ? "border-[#FFD100]" : "border-slate-700"}`} style={{ background: c }} />
+            ))}
+            <input data-testid="cut-color-input" type="color" value={p.cut_color} onChange={(e) => set({ cut_color: e.target.value })}
+              className="h-7 w-9 cursor-pointer rounded border border-slate-700 bg-transparent p-0.5" />
+          </div>
+        </div>
         {p.duplex && (
           <div className="mt-4">
             <span className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-slate-500">Rotazione retro</span>

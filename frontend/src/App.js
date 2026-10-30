@@ -21,7 +21,7 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const DEFAULTS = {
   sheet: "A4", orientation: "portrait", duplex: false, width: 8.5, height: 5.5,
   margin_top: 1, margin_bottom: 1, margin_left: 1, margin_right: 1, gap: 0,
-  cut_marks: true, flip: "long", format: "pdf", dpi: 300,
+  cut_marks: true, cut_color: "#000000", flip: "long", format: "pdf", dpi: 300,
 };
 
 let uid = 0;

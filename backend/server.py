@@ -9,6 +9,7 @@ from PIL import Image, ImageOps, ImageDraw
 from reportlab.pdfgen import canvas as rl_canvas
 from reportlab.lib.utils import ImageReader
 from reportlab.lib.units import cm
+from reportlab.lib.colors import HexColor
 import io
 from functools import lru_cache
 import zipfile
@@ -49,6 +50,7 @@ class Params(BaseModel):
     margin_right: float = Field(ge=0, default=1)
     gap: float = Field(ge=0, default=0)
     cut_marks: bool = True
+    cut_color: str = Field("#000000", pattern=r"^#[0-9A-Fa-f]{6}$")
     flip: Literal["long", "short"] = "long"
     format: Literal["pdf", "png", "jpg"] = "pdf"
     dpi: int = Field(ge=72, le=600, default=300)
@@ -207,15 +209,17 @@ def render_pdf(p, W, H, pages, fronts, backs):
             if round_:
                 c.restoreState()
         if front:
+            c.setStrokeColor(HexColor(p.cut_color))
             c.setLineWidth(0.4)
             for t in outlined(p, tiles):
                 c.ellipse(t["x"] * cm, (H - t["y"] - t["h"]) * cm, (t["x"] + t["w"]) * cm, (H - t["y"]) * cm, stroke=1, fill=0)
         if marks:
+            c.setStrokeColor(HexColor(p.cut_color))
             c.setLineWidth(0.25)
             for x1, y1, x2, y2 in cut_lines(tiles):
                 c.line(x1 * cm, (H - y1) * cm, x2 * cm, (H - y2) * cm)
-            for color, lw in ((1, 0.9), (0, 0.3)):
-                c.setStrokeGray(color)
+            for color, lw in (("#FFFFFF", 0.9), (p.cut_color, 0.3)):
+                c.setStrokeColor(HexColor(color))
                 c.setLineWidth(lw)
                 for x1, y1, x2, y2 in inner_crosses(tiles):
                     c.line(x1 * cm, (H - y1) * cm, x2 * cm, (H - y2) * cm)
@@ -254,13 +258,13 @@ def render_raster(p, W, H, tiles, imgs, marks, rotate, cache, front):
         d = ImageDraw.Draw(sheet)
         lw = max(1, round(0.015 * k))
         for t in outlined(p, tiles):
-            d.ellipse([t["x"] * k, t["y"] * k, (t["x"] + t["w"]) * k - 1, (t["y"] + t["h"]) * k - 1], outline="black", width=lw)
+            d.ellipse([t["x"] * k, t["y"] * k, (t["x"] + t["w"]) * k - 1, (t["y"] + t["h"]) * k - 1], outline=p.cut_color, width=lw)
     if marks:
         d = ImageDraw.Draw(sheet)
         lw = max(1, round(0.025 * k))
         for x1, y1, x2, y2 in cut_lines(tiles):
-            d.line([(x1 * k, y1 * k), (x2 * k, y2 * k)], fill="black", width=lw)
-        for color, w in (("white", lw * 3), ("black", lw)):
+            d.line([(x1 * k, y1 * k), (x2 * k, y2 * k)], fill=p.cut_color, width=lw)
+        for color, w in (("white", lw * 3), (p.cut_color, lw)):
             for x1, y1, x2, y2 in inner_crosses(tiles):
                 d.line([(x1 * k, y1 * k), (x2 * k, y2 * k)], fill=color, width=w)
     out = io.BytesIO()

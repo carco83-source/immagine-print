@@ -35,7 +35,7 @@ export const SheetPreview = ({ info, page, p, items, side, tagUrls = {}, uid = "
             </g>
             {round ? (
               <ellipse data-testid={tid(!isBack && items[t.idx]?.outline ? `outline-${i}` : undefined)} cx={t.x + t.w / 2} cy={t.y + t.h / 2} rx={t.w / 2} ry={t.h / 2} fill="none"
-                stroke={!isBack && items[t.idx]?.outline ? "#000" : "#94A3B8"} strokeWidth={!isBack && items[t.idx]?.outline ? 0.03 : 0.015} />
+                stroke={!isBack && items[t.idx]?.outline ? p.cut_color : "#94A3B8"} strokeWidth={!isBack && items[t.idx]?.outline ? 0.03 : 0.015} />
             ) : (
               <rect x={t.x} y={t.y} width={t.w} height={t.h} fill="none" stroke="#94A3B8" strokeWidth={0.015} />
             )}
@@ -46,8 +46,8 @@ export const SheetPreview = ({ info, page, p, items, side, tagUrls = {}, uid = "
         );
       })}
       {!isBack && p.cut_marks &&
-        cutLines(page).map(([x1, y1, x2, y2], i) => <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#000" strokeWidth={0.025} />)}
-      {!isBack && p.cut_marks && ["#fff", "#000"].map((c, k) =>
+        cutLines(page).map(([x1, y1, x2, y2], i) => <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={p.cut_color} strokeWidth={0.025} />)}
+      {!isBack && p.cut_marks && ["#fff", p.cut_color].map((c, k) =>
         innerCrosses(page).map(([x1, y1, x2, y2], i) => (
           <line key={`${k}-${i}`} data-testid={tid(k ? `inner-cross-${i}` : undefined)} x1={x1} y1={y1} x2={x2} y2={y2} stroke={c} strokeWidth={k ? 0.025 : 0.075} />
         )))}
