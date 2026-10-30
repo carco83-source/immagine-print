@@ -47,7 +47,7 @@ export async function restoreFonts(names) {
   }
 }
 
-function drawFit(ctx, img, x, y, w, h, fit) {
+export function drawFit(ctx, img, x, y, w, h, fit) {
   ctx.save();
   ctx.beginPath();
   ctx.rect(x, y, w, h);
@@ -64,7 +64,7 @@ function drawFit(ctx, img, x, y, w, h, fit) {
 const fontCss = (c, size) => `${c.italic ? "italic " : ""}${c.bold ? "bold " : ""}${size}px ${c.font}`;
 
 // Auto-fits multi-line text inside the zone with the chosen style and alignment.
-function drawText(ctx, c, x, y, w, h) {
+export function drawText(ctx, c, x, y, w, h) {
   if (!c?.text?.trim()) return;
   const lines = c.text.split("\n");
   const pad = Math.min(w, h) * 0.1;
@@ -83,17 +83,17 @@ function drawText(ctx, c, x, y, w, h) {
   lines.forEach((l, i) => ctx.fillText(l, tx, top + i * lh));
 }
 
-const loadFont = (c) => (c?.text?.trim() ? document.fonts.load(fontCss(c, 40), c.text) : null);
+export const loadFont = (c) => (c?.text?.trim() ? document.fonts.load(fontCss(c, 40), c.text) : null);
 
 // Renders a bomboniera tag tile: image (+ optional text) on the front, text on the back, right half.
-export async function composeTag(item, side, wcm, hcm, dpi) {
+export async function composeTag(item, side, wcm, hcm, dpi, bg) {
   const k = dpi / 2.54;
   const W = Math.max(1, Math.round(wcm * k)), H = Math.max(1, Math.round(hcm * k));
   const cv = document.createElement("canvas");
   cv.width = W;
   cv.height = H;
   const ctx = cv.getContext("2d");
-  ctx.fillStyle = "#fff";
+  ctx.fillStyle = bg || "#fff";
   ctx.fillRect(0, 0, W, H);
   const zx = Math.round(W / 2), zw = W - zx;
   if (side === "front") {

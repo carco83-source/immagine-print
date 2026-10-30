@@ -16,7 +16,7 @@ export const SheetPreview = ({ info, page, p, items, side, tagUrls = {}, uid = "
         fill="none" stroke="#00A8E8" strokeWidth={0.03} strokeDasharray="0.2 0.15" />
       {tiles.map((t, i) => {
         const it = items[t.idx];
-        const tagUrl = it?.tag ? tagUrls[it.id]?.[side] : null;
+        const tagUrl = tagUrls[it?.id]?.[side] || null;
         const img = tagUrl ? { url: tagUrl } : isBack ? it?.back : it?.front;
         const round = items[t.idx]?.shape === "round";
         return (

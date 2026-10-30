@@ -9,7 +9,9 @@ import { ExportBar } from "./components/ExportBar";
 import { SheetPreview } from "./components/SheetPreview";
 import { computePages } from "./lib/layout";
 import { loadForPrint, loadImage } from "./lib/image";
-import { composeTag, canvasBlob, newTxt, customFontNames, restoreFonts } from "./lib/tag";
+import { composeTag, newTxt, customFontNames, restoreFonts } from "./lib/tag";
+import { canvasBlob } from "./lib/tag";
+import { newDeco, hasDeco, isComposed, composeSide } from "./lib/deco";
 import { saveTemplate, saveWork } from "./lib/db";
 import { useTagPreviews } from "./lib/useTagPreviews";
 import { tileSize } from "./lib/layout";
@@ -23,7 +25,7 @@ const DEFAULTS = {
 };
 
 let uid = 0;
-const newItem = (front = null) => ({ id: ++uid, front, back: null, copies: 1, width: 9.5, height: 13.5, fit: "cover", shape: "rect", outline: true, tag: false, frontTxt: newTxt({ pos: "left", on: false }), backTxt: newTxt() });
+const newItem = (front = null) => ({ id: ++uid, front, back: null, copies: 1, width: 9.5, height: 13.5, fit: "cover", shape: "rect", outline: true, tag: false, frontTxt: newTxt({ pos: "left", on: false }), backTxt: newTxt(), deco: newDeco() });
 const thumbOf = (img) => {
   const cv = document.createElement("canvas");
   const k = 120 / Math.max(img.w, img.h);
@@ -56,10 +58,10 @@ export default function App() {
   const onSaveTemplate = async (item, name) => {
     const [w, h] = tileSize(item, p);
     const thumb = (await composeTag(item, "front", w, h, 60)).toDataURL();
-    const { fit, shape, outline, tag, frontTxt, backTxt } = item;
+    const { fit, shape, outline, tag, frontTxt, backTxt, deco } = item;
     await saveTemplate({
       name, created: new Date().toISOString(), size: [w, h], thumb,
-      item: { fit, shape, outline, tag, frontTxt, backTxt },
+      item: { fit, shape, outline, tag, frontTxt, backTxt, deco },
       image: item.front?.file || null, fonts: customFontNames([frontTxt.font, backTxt.font]),
     });
     setTplVersion((v) => v + 1);
@@ -117,18 +119,19 @@ export default function App() {
   };
 
   const onExport = async () => {
-    if (items.some((it) => !it.front)) return toast.error("Carica il fronte di ogni immagine");
-    if (p.duplex && items.some((it) => !it.back && !it.tag)) return toast.error("Carica il retro di ogni immagine");
+    if (items.some((it) => !it.front && !hasDeco(it, "front"))) return toast.error("Carica il fronte di ogni immagine (o aggiungi sfondo/testo)");
+    if (p.duplex && items.some((it) => !it.back && !it.tag && !hasDeco(it, "back"))) return toast.error("Carica il retro di ogni immagine (o aggiungi sfondo/testo sul retro)");
     if (!info.total) return toast.error("Nessuna immagine entra nel foglio");
     const fd = new FormData();
-    fd.append("params", JSON.stringify({ ...clean, items: cleanItems.map(({ width, height, copies, fit, shape, outline, tag }) => ({ width, height, copies, shape, outline, fit: tag ? "stretch" : fit, hires: !!tag })) }));
+    fd.append("params", JSON.stringify({ ...clean, items: cleanItems.map((it) => ({ width: it.width, height: it.height, copies: it.copies, shape: it.shape, outline: it.outline, fit: isComposed(it) ? "stretch" : it.fit, hires: isComposed(it) })) }));
     setLoading(true);
     try {
       for (const [i, it] of cleanItems.entries()) {
-        if (it.tag) {
+        if (isComposed(it)) {
           const [w, h] = tileSize(it, clean);
-          fd.append(`front_${i}`, await canvasBlob(await composeTag(it, "front", w, h, Math.max(p.dpi, 600)), `fronte_${i}.png`));
-          if (p.duplex) fd.append(`back_${i}`, await canvasBlob(await composeTag(it, "back", w, h, Math.max(p.dpi, 600)), `retro_${i}.png`));
+          const dpi = Math.max(p.dpi, 600);
+          fd.append(`front_${i}`, await canvasBlob(await composeSide(it, "front", w, h, dpi), `fronte_${i}.png`));
+          if (p.duplex) fd.append(`back_${i}`, await canvasBlob(await composeSide(it, "back", w, h, dpi), `retro_${i}.png`));
         } else {
           fd.append(`front_${i}`, it.front.file);
           if (p.duplex) fd.append(`back_${i}`, it.back.file);
@@ -167,7 +170,7 @@ export default function App() {
       <div className="flex flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
         <aside className="flex w-full shrink-0 flex-col border-r border-slate-800 bg-[#111827] lg:w-[440px] lg:overflow-y-auto">
           <Controls {...{ p, set, items, update, remove, addFiles, info, onSaveTemplate, onUseTemplate, tplVersion, renderMini, onOpenWork }} />
-          <ExportBar p={p} set={set} onExport={onExport} onSave={onSaveWork} loading={loading} disabled={!items.some((it) => it.front)} />
+          <ExportBar p={p} set={set} onExport={onExport} onSave={onSaveWork} loading={loading} disabled={!items.some((it) => it.front || hasDeco(it, "front"))} />
         </aside>
 
         <main className="workbench relative flex flex-1 flex-col overflow-hidden">
