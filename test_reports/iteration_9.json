@@ -1,0 +1,31 @@
+{
+  "summary": "Frontend-only test of the text, shapes and background feature (DecoPanel). Every requested flow passed. Non-duplex: the deco panel shows with no side Segmented. Add rect/ellipse/text works, and so do delete, fill, opacity, border switch with border colour, x/y/w/h ranges and 'Rendi quadrato' (w=50 gave h=35, which matches the 9.5/13.5 ratio). The TextEditor accepts textarea input and bold. The bg switch and colour work. The main preview switches from a blob image to a composited data URL, and the mini preview updates. PNG export pixels show the image green, red rect, white ellipse blend and the #FDE68A background (with Adatta). Duplex: with no back image, export gives the 'Carica il retro' toast. After adding a back bg (#0000ff) and a green rect with text, export works; the ZIP retro.png has blue and green pixels, and sheet-preview-back shows the composite. With no front image, the export button is disabled. Adding a front bg enables it, and the PNG has magenta bg plus the ellipse. Round shape: clipPath is in the preview and the exported corners are white (clipped). Save work then reload then Open restored duplex, the back bg, the layer fill/text/x. Bomboniera tag: back text on the right half plus a red deco rect on the left. The short-edge flip rotates the preview group, and in the exported retro.png the red rect and text sit mirrored, which is correct. Template save then reload then use restored the deco layer and back text. No page errors. Found and fixed a stray '}' text node in ItemCard.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "ItemCard", "issue": "A stray '}' after <DecoPanel .../> showed as a literal '}' character in every item card. FIXED by the testing agent.", "selector": "[data-testid='item-0']", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "DecoPanel LayerEditor (shape row)", "issues": ["The Opacità range input keeps its intrinsic width of about 129px. It overflows its 1fr grid column, covers the 'Bordo' label (only 'do' shows) and hides the opacity value number. Fix: add 'w-full min-w-0' to the range input in Range, or put the Bordo switch on its own line."]},
+      {"screen": "ImageDrop without image", "issues": ["When the front or back has no image but has a deco bg or layers, the dropzone still shows only 'Trascina o clicca'. The mini preview of the composite only appears when an image exists. Consider showing renderMini when hasDeco is true."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Fix the Opacità range overflowing onto the 'Bordo' label in LayerEditor (DecoPanel.jsx Range: add w-full min-w-0 to the input)",
+    "Optional: show the composite mini preview in the dropzone when a side has no image but has a deco",
+    "Optional: the onSaveTemplate thumbnail uses composeTag instead of composeSide, so deco layers are missing from template thumbnails"
+  ],
+  "critical_code_review_comments": [
+    "App.onSaveTemplate builds the thumbnail with composeTag(item,'front',...), which ignores deco layers. Use composeSide for consistency.",
+    "The onExport 'Carica il fronte' toast cannot be reached because the export button is disabled when no item has a front or front deco. With several items, though, it still fires correctly for an item that is missing one.",
+    "useTagPreviews recomposes every composed item at 120dpi on each change after a 120ms debounce, using toDataURL. This is fine for a few items but may lag with many decorated items."
+  ],
+  "updated_files": ["/app/frontend/src/components/ItemCard.jsx"],
+  "success_rate": {"backend": "N/A", "frontend": "100%"},
+  "seed_data_creation": "None persisted (TEST_deco work and TEST_tpl_deco template deleted)",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Test images: /tmp/imgs/a.jpg (800x1100 green 31,120,40) and b.jpg (1000x700 blue 40,40,160). Use page.fill on type=color/range inputs. Deco testids: item-N-deco-{side}-bg-switch/-bg-color/-add-rect/-add-ellipse/-add-text and -layer-K-{fill,opacity,border,border-color,x,y,w,h,square,delete,txt-textarea}. Duplex PNG export downloads a ZIP with fronte.png/retro.png. Check pixels with PIL. Import asyncio in the script for the dialog handler."
+}

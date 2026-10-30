@@ -11,7 +11,7 @@ const addBtn = "flex flex-1 items-center justify-center gap-1 rounded-md border 
 const Range = ({ label, value, onChange, testid }) => (
   <label className="grid grid-cols-[52px_1fr_30px] items-center gap-2 text-[10px] text-slate-400">
     {label}
-    <input data-testid={testid} type="range" min={0} max={100} value={value} onChange={(e) => onChange(+e.target.value)} className="accent-[#00A8E8]" />
+    <input data-testid={testid} type="range" min={0} max={100} value={value} onChange={(e) => onChange(+e.target.value)} className="w-full min-w-0 accent-[#00A8E8]" />
     <span className="text-right font-mono text-slate-500">{value}</span>
   </label>
 );

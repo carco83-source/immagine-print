@@ -71,7 +71,7 @@ export const ItemCard = ({ item, i, p, setP, onSave, renderMini, update, remove,
         </div>
       <FitSelect testid={`${t}-fit`} value={item.fit} onChange={(v) => set({ fit: v })} />
       {item.tag && <TagText item={item} t={t} set={set} p={p} onSave={onSave} />}
-      <DecoPanel item={item} t={t} set={set} duplex={p.duplex} />}
+      <DecoPanel item={item} t={t} set={set} duplex={p.duplex} />
       <PassportPresets testid={`${t}-passport`} current={[sz.width, sz.height]} onApply={(width, height) => setSize({ width, height })} />
       <QuickFormats testid={`${t}-quick`} current={[sz.width, sz.height]} onApply={(width, height) => setSize({ width, height })} />
       <div className="mt-3 flex items-end gap-2">

@@ -9,7 +9,7 @@ import { ExportBar } from "./components/ExportBar";
 import { SheetPreview } from "./components/SheetPreview";
 import { computePages } from "./lib/layout";
 import { loadForPrint, loadImage } from "./lib/image";
-import { composeTag, newTxt, customFontNames, restoreFonts } from "./lib/tag";
+import { newTxt, customFontNames, restoreFonts } from "./lib/tag";
 import { canvasBlob } from "./lib/tag";
 import { newDeco, hasDeco, isComposed, composeSide } from "./lib/deco";
 import { saveTemplate, saveWork } from "./lib/db";
@@ -57,7 +57,7 @@ export default function App() {
   const [tplVersion, setTplVersion] = useState(0);
   const onSaveTemplate = async (item, name) => {
     const [w, h] = tileSize(item, p);
-    const thumb = (await composeTag(item, "front", w, h, 60)).toDataURL();
+    const thumb = (await composeSide(item, "front", w, h, 60)).toDataURL();
     const { fit, shape, outline, tag, frontTxt, backTxt, deco } = item;
     await saveTemplate({
       name, created: new Date().toISOString(), size: [w, h], thumb,
