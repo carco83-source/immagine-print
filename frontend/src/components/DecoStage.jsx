@@ -9,7 +9,7 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
 function resize(mode, o, dx, dy, W, Hh) {
   const { x, y, w, h } = o;
-  if (mode === "move") return { x: clamp(x + dx, -w + MIN, 100 - MIN), y: clamp(y + dy, -h + MIN, 100 - MIN) };
+  if (mode === "move") return { x: clamp(x + dx, -w + 15, 85), y: clamp(y + dy, -h + 15, 85) };
   if (mode.length === 2) {
     const sx = mode.includes("e") ? 1 : -1, sy = mode.includes("s") ? 1 : -1;
     const k = Math.max(MIN / Math.min(w, h), ((w + sx * dx) * W) / (w * W), ((h + sy * dy) * Hh) / (h * Hh));
@@ -65,19 +65,19 @@ export const DecoStage = ({ item, side, wcm, hcm, layers, sel, onSelect, onChang
 
   return (
     <div ref={ref} data-testid={testid} onPointerDown={() => onSelect(null)}
-      className="relative mt-2 w-full touch-none select-none overflow-hidden rounded-sm bg-white shadow-[0_0_0_1px_#334155]"
-      style={{ aspectRatio: `${wcm} / ${hcm}` }}>
+      className="relative mx-auto my-3 touch-none select-none rounded-sm bg-white shadow-[0_0_0_1px_#334155]"
+      style={{ aspectRatio: `${wcm} / ${hcm}`, width: `min(100%, ${Math.round((320 * wcm) / hcm)}px)` }}>
       {url && <img src={url} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full" />}
       {layers.map((l, k) => {
         const on = sel === l.id;
         return (
           <div key={l.id} data-testid={`${testid}-box-${k}`} onPointerDown={(e) => start(e, l, "move")}
-            className={`absolute cursor-move ${on ? "outline outline-2 outline-[#00A8E8]" : "outline-dashed outline-1 outline-[#00A8E8]/60 hover:outline-[#00A8E8]"}`}
+            className={`absolute cursor-move ${on ? "z-10 outline outline-2 outline-[#00A8E8]" : "outline-dashed outline-1 outline-[#00A8E8]/60 hover:outline-[#00A8E8]"}`}
             style={{ left: `${l.x}%`, top: `${l.y}%`, width: `${l.w}%`, height: `${l.h}%` }}>
             {!on && <span className="absolute -left-px -top-4 rounded-sm bg-[#00A8E8]/80 px-1 font-mono text-[9px] text-white">{k + 1}</span>}
             {on && H.map((m) => (
               <span key={m} data-testid={`${testid}-box-${k}-${m}`} onPointerDown={(e) => start(e, l, m)}
-                className={`absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 border border-[#00A8E8] ${m.length === 2 ? "rounded-full bg-white" : "rounded-[2px] bg-[#00A8E8]"}`}
+                className={`absolute h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 border border-[#00A8E8] before:absolute before:-inset-2 before:content-[''] ${m.length === 2 ? "rounded-full bg-white" : "rounded-[2px] bg-[#00A8E8]"}`}
                 style={{ left: `${POS[m][0]}%`, top: `${POS[m][1]}%`, cursor: `${CUR[m]}-resize` }} />
             ))}
           </div>

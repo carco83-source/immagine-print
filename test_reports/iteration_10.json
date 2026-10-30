@@ -1,0 +1,31 @@
+{
+  "summary": "Frontend-only test of the new mouse/touch DecoStage, which replaces the sliders. Every requested core flow works. The old x/y/w/h sliders are gone. Adding 2 texts, 2 rects and 1 ellipse gives 5 frames and 5 chips. Clicking a frame selects it (8 handles plus its editor); clicking empty stage deselects; chips select layers. Chips are hidden with only 1 layer. Move by dragging the body works (dx/dy match the mouse 1:1). Corner handles se, nw and ne keep the w/h ratio exactly (0.844 stays 0.844) with the opposite corner anchored. Side handles e, s and n stretch only one dimension with the opposite edge anchored; the w handle works when the frame is inside the stage (dw -40, right edge kept). The minimum size clamps to 3% on the shorter side. Moving is clamped to a 3% visible margin. Editor controls work: fill, opacity, border with border colour, Rendi quadrato, delete, text textarea, font select (4 options), colour, bold, italic, align. The main sheet preview updates. Exported PNG pixels match the stage: a red rect dragged to 97%/97% shows at the tile's bottom-right in the PNG. Duplex: the side switch shows the back stage on its own (front rect unchanged). The back ellipse was moved to 0,0 and the retro.png in the ZIP has the yellow ellipse at the tile's top-left at 60%x50%. On a 390px mobile viewport the stage has touch-action:none, and synthetic touch PointerEvents move the frame and resize it proportionally from a corner. No page errors.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "DecoStage handles", "issue": "When a frame reaches or passes the stage edge, its handles are cut off by the stage's overflow-hidden and can't be grabbed. Example: after a nw-corner enlarge, x became -0.4% and the w handle no longer responded. The se handle on a frame that passed the bottom edge also couldn't be clicked; the click went through and scrolled the page. Layers can be dragged until only 3% shows (clamp -w+3 .. 97), which leaves a sliver about 10px wide that is very hard to grab back.", "selector": "[data-testid='item-N-deco-{side}-stage-box-K-{w|se}']", "priority": "MEDIUM"},
+      {"component": "DecoStage z-order", "issue": "If a layer is selected via its chip and the user drags its body where a later layer sits on top, the top layer moves and takes over the selection. Example: chip-0 ellipse selected, dragging the centre moved the text layer 1. The selected frame should get a higher z-index (e.g. z-10) so it can always be dragged once selected.", "selector": "[data-testid='item-N-deco-{side}-stage-box-K']", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "DecoStage on mobile", "issues": ["The handles are 12px (h-3 w-3), too small for a finger. Add a larger invisible hit area (e.g. 24-28px before:/after: pseudo element) on touch devices."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Let handles stay reachable at the stage edge. Option A: remove overflow-hidden from the stage wrapper and clip only the composite img (or use an inner clip wrapper). Option B: clamp moves and resizes so the frame stays inside 0..100%.",
+    "Raise the selected frame's z-index (e.g. className z-10 when on) so dragging a chip-selected layer doesn't grab the overlapping layer above it.",
+    "Optional: enlarge the handle hit areas for touch."
+  ],
+  "critical_code_review_comments": [
+    "DecoStage window listeners are re-registered on every render because onChange (upd) is a new function each render. This works because the drag state lives in a ref, but wrapping it in useCallback or using a ref for onChange would avoid churn during drag.",
+    "Every pointermove calls set() on the item. That triggers stage recomposition at up to 200dpi (40ms debounce) and main-sheet preview recomposition. No lag was observed with 1 item, but it may get heavy with many decorated items. Consider committing on pointerup or using requestAnimationFrame throttling.",
+    "No setPointerCapture is used. Window listeners cover it, but pointercancel (e.g. a touch interrupted by the OS) isn't handled, so drag.current could stay set until the next pointerup."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "92%"},
+  "seed_data_creation": "None",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Test images: /tmp/imgs/a.jpg (800x1100 green) and b.jpg (1000x700 blue). Scroll the stage into view with scrollIntoView({block:'start'}) and then mouse.wheel(0,-80) before dragging. Drag with page.mouse in 8 steps. Default layer boxes: text 10,35,80,30; rect 15,30,70,40; ellipse 20,25,60,50. A text layer added after an ellipse covers its centre. Duplex PNG export gives a ZIP with fronte.png/retro.png. sheet-preview-back only renders after clicking 'Retro' in the preview toggle. To emulate touch, dispatch PointerEvent with pointerType 'touch' from JS."
+}

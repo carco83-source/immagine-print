@@ -33,6 +33,7 @@
 - Testi, forme (rettangolo/quadrato, ovale/cerchio) e colore sfondo per fronte e retro (lib/deco.js, DecoPanel), composti lato client a 600 dpi
 - Colore linee di taglio (p.cut_color, anche contorni ovali), 4 colori rapidi + selettore
 - Ordine scheda: caricamento → foglio → forma → misure → riempi/adatta/deforma → copie+foglio pieno → Formati rapidi (bomboniera + fototessera visibili, altri a scomparsa) → testi bomboniera → testi/forme/sfondo
+- Editor visuale DecoStage: elementi spostabili col mouse/dito, angoli = ingrandimento proporzionale, lati = deformazione; slider rimossi; più testi/riquadri/cerchi con chip di selezione
 
 ## Backlog
 - P1: abbondanza (bleed); limite dimensione upload
