@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Type, Square, Circle, Trash2, Heart } from "lucide-react";
+import { Type, Square, Circle, Trash2, Heart, X } from "lucide-react";
 import { Switch } from "./ui/switch";
 import { Segmented } from "./Field";
 import { TextEditor } from "./TextEditor";
@@ -43,7 +43,7 @@ const LayerEditor = ({ l, k, t, onChange, onDelete, ratio }) => (
           <Switch data-testid={`${t}-border`} checked={l.border} onCheckedChange={(v) => onChange({ border: v })} />
         </label>
         {l.border && <input data-testid={`${t}-border-color`} type="color" value={l.borderColor} onChange={(e) => onChange({ borderColor: e.target.value })} className={colorCls} />}
-        <button data-testid={`${t}-square`} onClick={() => onChange({ h: Math.min(100, Math.round(l.w * ratio)) })} className="text-[#00A8E8] hover:underline">
+        <button data-testid={`${t}-square`} onClick={() => onChange({ h: Math.min(100, Math.round(l.w * ratio * (l.shape === "heart" ? 95 / 110 : 1))) })} className="text-[#00A8E8] hover:underline">
           Rendi {l.shape === "ellipse" ? "cerchio" : l.shape === "heart" ? "proporzionato" : "quadrato"}
         </button>
       </div>
@@ -63,6 +63,7 @@ export const DecoPanel = ({ item, t, set, duplex }) => {
   const upd = (id, patch) => put({ layers: d.layers.map((l) => (l.id === id ? { ...l, ...patch } : l)) });
   const add = (shape) => { const l = newLayer(shape); put({ layers: [...d.layers, l] }); setSel(l.id); };
   const k = d.layers.findIndex((l) => l.id === sel);
+  const del = (id) => { put({ layers: d.layers.filter((x) => x.id !== id) }); if (id === sel) setSel(null); };
   return (
     <div data-testid={`${t}-deco`} className="mt-3 rounded-md border border-[#00A8E8]/25 bg-[#00A8E8]/5 p-2.5">
       <span className="mb-1.5 block text-[10px] font-medium uppercase tracking-wider text-[#00A8E8]">Testi, forme e sfondo</span>
@@ -85,23 +86,29 @@ export const DecoPanel = ({ item, t, set, duplex }) => {
         <button data-testid={`${pt}-add-ellipse`} onClick={() => add("ellipse")} className={addBtn}><Circle size={12} /> + Cerchio</button>
         <button data-testid={`${pt}-add-heart`} onClick={() => add("heart")} className={addBtn}><Heart size={12} /> + Cuore</button>
       </div>
-      <DecoStage testid={`${pt}-stage`} item={item} side={s} wcm={item.width} hcm={item.height} layers={d.layers} sel={sel} onSelect={setSel} onChange={upd} />
+      <DecoStage testid={`${pt}-stage`} item={item} side={s} wcm={item.width} hcm={item.height} layers={d.layers} sel={sel} onSelect={setSel} onChange={upd} onDelete={del} />
       {d.layers.length > 0 && (
-        <p className="mt-1.5 text-[10px] text-slate-500">Clicca un elemento per selezionarlo: trascinalo per spostarlo, usa i pallini agli angoli per ingrandire in proporzione e i quadratini sui lati per deformare.</p>
+        <p className="mt-1.5 text-[10px] text-slate-500">Clicca un elemento per selezionarlo: trascinalo per spostarlo, pallini agli angoli = ingrandisci in proporzione, quadratini sui lati = deforma. Per cancellarlo usa la <span className="text-red-400">X rossa</span> o il tasto Canc.</p>
       )}
-      {d.layers.length > 1 && (
-        <div className="mt-2 flex flex-wrap gap-1">
+      {d.layers.length > 0 && (
+        <div className="mt-2 flex flex-wrap items-center gap-1">
           {d.layers.map((l, i) => (
-            <button key={l.id} data-testid={`${pt}-chip-${i}`} onClick={() => setSel(l.id)}
-              className={`rounded-full border px-2 py-0.5 text-[10px] transition-colors ${sel === l.id ? "border-[#00A8E8] bg-[#00A8E8]/20 text-white" : "border-slate-700 text-slate-400 hover:text-white"}`}>
-              {i + 1}. {NAMES[l.shape]}{l.txt.text ? ` · ${l.txt.text.split("\n")[0].slice(0, 12)}` : ""}
-            </button>
+            <span key={l.id} className={`flex items-center rounded-full border text-[10px] transition-colors ${sel === l.id ? "border-[#00A8E8] bg-[#00A8E8]/20 text-white" : "border-slate-700 text-slate-400 hover:text-white"}`}>
+              <button data-testid={`${pt}-chip-${i}`} onClick={() => setSel(l.id)} className="py-0.5 pl-2 pr-1">
+                {i + 1}. {NAMES[l.shape]}{l.txt.text ? ` · ${l.txt.text.split("\n")[0].slice(0, 12)}` : ""}
+              </button>
+              <button data-testid={`${pt}-chip-${i}-delete`} onClick={() => del(l.id)} title="Elimina" className="rounded-full p-1 pr-1.5 hover:text-red-400"><X size={10} /></button>
+            </span>
           ))}
+          {d.layers.length > 1 && (
+            <button data-testid={`${pt}-delete-all`} onClick={() => { if (window.confirm("Cancellare tutti i testi e le forme di questo lato?")) { put({ layers: [] }); setSel(null); } }}
+              className="ml-auto text-[10px] text-red-400 hover:underline">Cancella tutto</button>
+          )}
         </div>
       )}
       {k >= 0 && (
         <LayerEditor l={d.layers[k]} k={k} t={`${pt}-layer-${k}`} ratio={item.width / item.height}
-          onChange={(patch) => upd(sel, patch)} onDelete={() => { put({ layers: d.layers.filter((x) => x.id !== sel) }); setSel(null); }} />
+          onChange={(patch) => upd(sel, patch)} onDelete={() => del(sel)} />
       )}
     </div>
   );

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { RotateCw } from "lucide-react";
+import { RotateCw, X } from "lucide-react";
 import { composeSide } from "../lib/deco";
 
 const H = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
@@ -24,8 +24,22 @@ function resize(mode, o, dx, dy, W, Hh) {
   return { h: nh, y: y + h - nh };
 }
 
+// Keeps the opposite corner/edge fixed on screen when resizing a rotated layer.
+function anchorRotated(patch, d, W, Hh) {
+  const o = d.o, w1 = patch.w ?? o.w, h1 = patch.h ?? o.h;
+  const ax = d.mode.includes("e") ? -1 : d.mode.includes("w") ? 1 : 0;
+  const ay = d.mode.includes("s") ? -1 : d.mode.includes("n") ? 1 : 0;
+  const t = (d.rot * Math.PI) / 180, c = Math.cos(t), s = Math.sin(t);
+  const rot = (x, y) => [x * c - y * s, x * s + y * c];
+  const [ox, oy] = rot((ax * o.w * W) / 200, (ay * o.h * Hh) / 200);
+  const [nx, ny] = rot((ax * w1 * W) / 200, (ay * h1 * Hh) / 200);
+  const cx = ((o.x + o.w / 2) * W) / 100 + ox - nx, cy = ((o.y + o.h / 2) * Hh) / 100 + oy - ny;
+  patch.x = (cx * 100) / W - w1 / 2;
+  patch.y = (cy * 100) / Hh - h1 / 2;
+}
+
 // Single-tile canvas where layers are moved and resized with mouse or finger.
-export const DecoStage = ({ item, side, wcm, hcm, layers, sel, onSelect, onChange, testid }) => {
+export const DecoStage = ({ item, side, wcm, hcm, layers, sel, onSelect, onChange, onDelete, testid }) => {
   const ref = useRef(null);
   const drag = useRef(null);
   const [url, setUrl] = useState(null);
@@ -62,6 +76,7 @@ export const DecoStage = ({ item, side, wcm, hcm, layers, sel, onSelect, onChang
       }
       const dx = (px / r.width) * 100, dy = (py / r.height) * 100;
       const patch = resize(d.mode, d.o, dx, dy, r.width, r.height);
+      if (d.mode !== "move" && d.rot) anchorRotated(patch, d, r.width, r.height);
       onChange(d.id, Object.fromEntries(Object.entries(patch).map(([k, v]) => [k, Math.round(v * 10) / 10])));
     };
     const up = () => { drag.current = null; };
@@ -69,6 +84,16 @@ export const DecoStage = ({ item, side, wcm, hcm, layers, sel, onSelect, onChang
     window.addEventListener("pointerup", up);
     return () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
   }, [onChange]);
+
+  useEffect(() => {
+    if (!sel) return;
+    const key = (e) => {
+      if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || e.target.isContentEditable) return;
+      if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); onDelete(sel); }
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [sel, onDelete]);
 
   const start = (e, l, mode) => {
     e.stopPropagation();
@@ -96,7 +121,12 @@ export const DecoStage = ({ item, side, wcm, hcm, layers, sel, onSelect, onChang
                   className="absolute left-1/2 top-0 flex h-5 w-5 -translate-x-1/2 -translate-y-[38px] cursor-grab items-center justify-center rounded-full border border-[#00A8E8] bg-[#0B0F17] text-[#00A8E8] before:absolute before:-inset-2 before:content-['']">
                   <RotateCw size={11} />
                 </span>
-                {!!l.rot && <span className="pointer-events-none absolute left-1/2 top-0 -translate-y-[60px] translate-x-3 rounded-sm bg-[#00A8E8] px-1 font-mono text-[9px] text-white">{l.rot}°</span>}
+                {!!l.rot && <span className="pointer-events-none absolute left-1/2 top-0 rounded-sm bg-[#00A8E8] px-1 font-mono text-[9px] text-white" style={{ transform: `translate(12px, -60px) rotate(${-l.rot}deg)` }}>{l.rot}°</span>}
+                <button data-testid={`${testid}-box-${k}-delete`} onPointerDown={(e) => { e.stopPropagation(); onDelete(l.id); }} title="Elimina"
+                  className="absolute right-0 top-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow transition-transform hover:scale-110 before:absolute before:-inset-1.5 before:content-['']"
+                  style={{ transform: `translate(50%, -170%) rotate(${-(l.rot || 0)}deg)` }}>
+                  <X size={11} />
+                </button>
               </>
             )}
             {on && H.map((m) => (

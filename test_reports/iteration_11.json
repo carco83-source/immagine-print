@@ -1,0 +1,29 @@
+{
+  "summary": "Frontend-only test (desktop 1920x1080) of the rotation handle, rounded corners and heart shape in the DecoStage/DecoPanel. ALL requested flows pass and no page errors occurred. (1) Heart: the add-heart button labelled '+ Cuore' adds a layer named '1. Cuore'. Its default fill is pink (the stage composite pixel at the centre is pink, and the box corner and the top notch keep the background colour, so the heart path is correct). The shape segmented control shows Testo/Riquadro/Ovale/Cuore, and switching rect->heart works. The radius slider is hidden for non-rect shapes. (2) Rounded corners: the rect radius slider (0-100, '%' label) works. At 100 the corner pixel turns from white to background and the shape becomes a pill. (3) Rotation handle: it sits above the selected frame. Dragging it gives rotate(51deg) with the slider synced. Releasing at 48 deg snaps to 45 and at -93 snaps to -90. 80 stays 80. The degree label appears. The slider has min/max -180/180, set to 30 gives rotate(30deg), and rot-reset returns 0. (4) A rotated layer (45 deg) still moves 1:1 (20px,10px gives +8.9%,+3.1%). The se corner keeps the ratio (70/40 -> 79.4/45.4). The e side drag along the rotated x axis changes only w. The n side changes only h and y. The nw corner is proportional. (5) Output: the main sheet preview reflects rotation, hearts and rounded rects. Single-sided PNG export (2480x3508) contains the heart at -30 deg and a rounded rect at 45 deg, clipped to the tile. Duplex PNG gives a ZIP: fronte.png has the pink heart at 45 deg (bbox 637x636); retro.png has the red radius-100 rect at 90 deg (bbox 637x783, which matches the swapped 70%x40% of the tile, centred at the same x). The duplex PDF has 2 pages with the same results at 2x resolution. (6) Regression: duplex back side editing works independently, chips work and the text editor works; diagonal text at -45 deg renders. A saved work had rot/radius deleted from its layers in IndexedDB (older format) and still reopens without errors. Its frames show rotate(0deg), the sliders show 0, and rotation can be applied afterwards.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "DecoStage degree label", "issue": "The 'N°' label is a child of the rotated frame, so it rotates too. It reads sideways at ±90 and upside down near 180 (seen at -90 and 90). Render it outside the rotated element or counter-rotate it.", "selector": "[data-testid='item-N-deco-{side}-stage-box-K'] span (deg label)", "priority": "LOW"},
+      {"component": "DecoStage resize of rotated layer", "issue": "Corner and side resize keeps x/y (the unrotated top-left) as the anchor. When rot≠0 the centre moves along the global axes, so the opposite corner or edge drifts on screen instead of staying fixed. Ratio and local-axis behaviour are correct. To fix, recompute x/y so the rotated opposite anchor stays put.", "selector": "[data-testid='item-N-deco-{side}-stage-box-K-{se|nw|e|n...}']", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Optional: keep the rotation degree label upright (counter-rotate it or move it outside the rotated frame).",
+    "Optional: anchor the opposite corner in screen space when resizing a rotated layer.",
+    "Optional: make 'Rendi proporzionato' for hearts use the heart's natural aspect (110:95) instead of a square."
+  ],
+  "critical_code_review_comments": [
+    "deco.js uses ctx.roundRect, which isn't available in older browsers (Safari <16, Firefox <112). There it throws and breaks the stage and export for rect layers with radius>0. Consider a fallback using arcTo.",
+    "The move clamp (-w+15..85) uses the unrotated box, so a rotated layer can still get mostly off-stage at the corners. This is minor.",
+    "Switching shape rect->heart keeps the white rect fill (pink is only the default for new hearts). This is acceptable but may surprise users."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "100% of requested flows (2 low-priority UX nits)"},
+  "seed_data_creation": "IndexedDB work 'TEST_old' was created in a throwaway browser context only.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Test images: /tmp/imgs/a.jpg (800x1100 green 30,160,60). Default heart box is 25,25,50,45 with fill #E6007E. Scroll the stage with scrollIntoView({block:'start'}) and then mouse.wheel(0,-80) before dragging. For the rotation handle drag, compute the angle around the frame centre (0 deg = straight up). Save work uses window.prompt: register an async page.on('dialog') handler. Works live in IndexedDB 'impagina' v2 store 'works'. When modifying it via evaluate, close the db connection and use a timeout race, otherwise the script can hang. pypdf is available to extract PDF images."
+}
