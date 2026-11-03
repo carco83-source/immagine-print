@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Type, Square, Circle, Trash2 } from "lucide-react";
+import { Type, Square, Circle, Trash2, Heart } from "lucide-react";
 import { Switch } from "./ui/switch";
 import { Segmented } from "./Field";
 import { TextEditor } from "./TextEditor";
 import { DecoStage } from "./DecoStage";
 import { newDeco, newLayer } from "../lib/deco";
 
-const NAMES = { none: "Testo", rect: "Rettangolo", ellipse: "Cerchio / Ovale" };
+const NAMES = { none: "Testo", rect: "Rettangolo", ellipse: "Cerchio / Ovale", heart: "Cuore" };
 const addBtn = "flex flex-1 items-center justify-center gap-1 rounded-md border border-slate-700 py-2 text-[11px] text-slate-200 transition-colors hover:border-[#00A8E8]";
 const colorCls = "h-7 w-9 cursor-pointer rounded border border-slate-700 bg-transparent p-0.5";
 
@@ -17,7 +17,20 @@ const LayerEditor = ({ l, k, t, onChange, onDelete, ratio }) => (
       <button data-testid={`${t}-delete`} onClick={onDelete} title="Elimina" className="rounded-sm p-1 text-slate-500 hover:bg-red-500/15 hover:text-red-400"><Trash2 size={13} /></button>
     </div>
     <Segmented testid={`${t}-shape`} value={l.shape} onChange={(v) => onChange({ shape: v })}
-      options={[{ value: "none", label: "Solo testo" }, { value: "rect", label: "Rettangolo" }, { value: "ellipse", label: "Ovale" }]} />
+      options={[{ value: "none", label: "Testo" }, { value: "rect", label: "Riquadro" }, { value: "ellipse", label: "Ovale" }, { value: "heart", label: "Cuore" }]} />
+    <div className="mt-2 flex items-center gap-2 text-[10px] text-slate-400">
+      <span className="w-20 shrink-0">Rotazione</span>
+      <input data-testid={`${t}-rot`} type="range" min={-180} max={180} value={l.rot || 0} onChange={(e) => onChange({ rot: +e.target.value })} className="edit-slider min-w-0 flex-1 accent-[#00A8E8]" />
+      <span className="w-9 text-right font-mono text-slate-300">{l.rot || 0}°</span>
+      <button data-testid={`${t}-rot-reset`} onClick={() => onChange({ rot: 0 })} className="text-[#00A8E8] hover:underline">0°</button>
+    </div>
+    {l.shape === "rect" && (
+      <div className="mt-2 flex items-center gap-2 text-[10px] text-slate-400">
+        <span className="w-20 shrink-0">Angoli arrotondati</span>
+        <input data-testid={`${t}-radius`} type="range" min={0} max={100} value={l.radius || 0} onChange={(e) => onChange({ radius: +e.target.value })} className="edit-slider min-w-0 flex-1 accent-[#00A8E8]" />
+        <span className="w-9 text-right font-mono text-slate-300">{l.radius || 0}%</span>
+      </div>
+    )}
     {l.shape !== "none" && (
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-[10px] text-slate-400">
         <label className="flex items-center gap-1.5">Colore
@@ -31,7 +44,7 @@ const LayerEditor = ({ l, k, t, onChange, onDelete, ratio }) => (
         </label>
         {l.border && <input data-testid={`${t}-border-color`} type="color" value={l.borderColor} onChange={(e) => onChange({ borderColor: e.target.value })} className={colorCls} />}
         <button data-testid={`${t}-square`} onClick={() => onChange({ h: Math.min(100, Math.round(l.w * ratio)) })} className="text-[#00A8E8] hover:underline">
-          Rendi {l.shape === "ellipse" ? "cerchio" : "quadrato"}
+          Rendi {l.shape === "ellipse" ? "cerchio" : l.shape === "heart" ? "proporzionato" : "quadrato"}
         </button>
       </div>
     )}
@@ -70,6 +83,7 @@ export const DecoPanel = ({ item, t, set, duplex }) => {
         <button data-testid={`${pt}-add-text`} onClick={() => add("none")} className={addBtn}><Type size={12} /> + Testo</button>
         <button data-testid={`${pt}-add-rect`} onClick={() => add("rect")} className={addBtn}><Square size={12} /> + Riquadro</button>
         <button data-testid={`${pt}-add-ellipse`} onClick={() => add("ellipse")} className={addBtn}><Circle size={12} /> + Cerchio</button>
+        <button data-testid={`${pt}-add-heart`} onClick={() => add("heart")} className={addBtn}><Heart size={12} /> + Cuore</button>
       </div>
       <DecoStage testid={`${pt}-stage`} item={item} side={s} wcm={item.width} hcm={item.height} layers={d.layers} sel={sel} onSelect={setSel} onChange={upd} />
       {d.layers.length > 0 && (

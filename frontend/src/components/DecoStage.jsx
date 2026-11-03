@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { RotateCw } from "lucide-react";
 import { composeSide } from "../lib/deco";
 
 const H = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
@@ -46,7 +47,20 @@ export const DecoStage = ({ item, side, wcm, hcm, layers, sel, onSelect, onChang
       const d = drag.current;
       if (!d) return;
       const r = ref.current.getBoundingClientRect();
-      const dx = ((e.clientX - d.px) / r.width) * 100, dy = ((e.clientY - d.py) / r.height) * 100;
+      if (d.mode === "rot") {
+        const cx = r.left + ((d.o.x + d.o.w / 2) / 100) * r.width, cy = r.top + ((d.o.y + d.o.h / 2) / 100) * r.height;
+        let a = Math.round((Math.atan2(e.clientY - cy, e.clientX - cx) * 180) / Math.PI + 90);
+        if (a > 180) a -= 360;
+        const snap = Math.round(a / 45) * 45;
+        onChange(d.id, { rot: Math.abs(a - snap) <= 4 ? snap : a });
+        return;
+      }
+      let px = e.clientX - d.px, py = e.clientY - d.py;
+      if (d.mode !== "move" && d.rot) {
+        const t = (-d.rot * Math.PI) / 180;
+        [px, py] = [px * Math.cos(t) - py * Math.sin(t), px * Math.sin(t) + py * Math.cos(t)];
+      }
+      const dx = (px / r.width) * 100, dy = (py / r.height) * 100;
       const patch = resize(d.mode, d.o, dx, dy, r.width, r.height);
       onChange(d.id, Object.fromEntries(Object.entries(patch).map(([k, v]) => [k, Math.round(v * 10) / 10])));
     };
@@ -60,7 +74,7 @@ export const DecoStage = ({ item, side, wcm, hcm, layers, sel, onSelect, onChang
     e.stopPropagation();
     e.preventDefault();
     onSelect(l.id);
-    drag.current = { id: l.id, mode, px: e.clientX, py: e.clientY, o: { x: l.x, y: l.y, w: l.w, h: l.h } };
+    drag.current = { id: l.id, mode, rot: l.rot || 0, px: e.clientX, py: e.clientY, o: { x: l.x, y: l.y, w: l.w, h: l.h } };
   };
 
   return (
@@ -73,8 +87,18 @@ export const DecoStage = ({ item, side, wcm, hcm, layers, sel, onSelect, onChang
         return (
           <div key={l.id} data-testid={`${testid}-box-${k}`} onPointerDown={(e) => start(e, l, "move")}
             className={`absolute cursor-move ${on ? "z-10 outline outline-2 outline-[#00A8E8]" : "outline-dashed outline-1 outline-[#00A8E8]/60 hover:outline-[#00A8E8]"}`}
-            style={{ left: `${l.x}%`, top: `${l.y}%`, width: `${l.w}%`, height: `${l.h}%` }}>
+            style={{ left: `${l.x}%`, top: `${l.y}%`, width: `${l.w}%`, height: `${l.h}%`, transform: `rotate(${l.rot || 0}deg)` }}>
             {!on && <span className="absolute -left-px -top-4 rounded-sm bg-[#00A8E8]/80 px-1 font-mono text-[9px] text-white">{k + 1}</span>}
+            {on && (
+              <>
+                <span className="pointer-events-none absolute left-1/2 top-0 h-6 w-px -translate-y-full bg-[#00A8E8]" />
+                <span data-testid={`${testid}-box-${k}-rot`} onPointerDown={(e) => start(e, l, "rot")} title="Ruota"
+                  className="absolute left-1/2 top-0 flex h-5 w-5 -translate-x-1/2 -translate-y-[38px] cursor-grab items-center justify-center rounded-full border border-[#00A8E8] bg-[#0B0F17] text-[#00A8E8] before:absolute before:-inset-2 before:content-['']">
+                  <RotateCw size={11} />
+                </span>
+                {!!l.rot && <span className="pointer-events-none absolute left-1/2 top-0 -translate-y-[60px] translate-x-3 rounded-sm bg-[#00A8E8] px-1 font-mono text-[9px] text-white">{l.rot}°</span>}
+              </>
+            )}
             {on && H.map((m) => (
               <span key={m} data-testid={`${testid}-box-${k}-${m}`} onPointerDown={(e) => start(e, l, m)}
                 className={`absolute h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 border border-[#00A8E8] before:absolute before:-inset-2 before:content-[''] ${m.length === 2 ? "rounded-full bg-white" : "rounded-[2px] bg-[#00A8E8]"}`}
