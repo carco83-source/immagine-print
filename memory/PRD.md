@@ -34,6 +34,8 @@
 - Colore linee di taglio (p.cut_color, anche contorni ovali), 4 colori rapidi + selettore
 - Ordine scheda: caricamento → foglio → forma → misure → riempi/adatta/deforma → copie+foglio pieno → Formati rapidi (bomboniera + fototessera visibili, altri a scomparsa) → testi bomboniera → testi/forme/sfondo
 - Editor visuale DecoStage: elementi spostabili col mouse/dito, angoli = ingrandimento proporzionale, lati = deformazione; slider rimossi; più testi/riquadri/cerchi con chip di selezione
+- Rotazione elementi (maniglia + slider, snap 45°), angoli arrotondati riquadri, forma cuore
+- Cancellazione elementi: X rossa sul selezionato, tasto Canc/Backspace, X sulle etichette, "Cancella tutto" per lato
 
 ## Backlog
 - P1: abbondanza (bleed); limite dimensione upload

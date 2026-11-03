@@ -1,0 +1,27 @@
+{
+  "summary": "Frontend-only test (desktop 1920x1080) of layer deletion in DecoStage/DecoPanel, plus retest of the iteration_11 fixes. Almost everything passes; one real bug was found. (1) Red X: item-0-deco-front-stage-box-K-delete sits top-right of the selected frame and deletes only that layer (3 layers went to 2, other chips intact). At rot=90 the X has a net rotation of 0 (counter-rotated, so it stays upright), and clicking it deletes the layer. (2) Keyboard: after clicking a layer on the stage on a fresh page (focus on body/button), Delete removes it. With chip focus, Backspace removes the selected layer. Typing Backspace/Delete inside the layer textarea only edits the text (ABC -> AB) and does not delete the layer. (3) Chips: they show for 1 layer, and chip-K-delete removes the correct one (4 -> 3 with the right names). The 'Cancella tutto' link is hidden with 1 layer and shown with more than 1. The window.confirm text is 'Cancellare tutti i testi e le forme di questo lato?'. Dismiss keeps the layers; accept removes all of them and hides the chips. (4) The editor trash button layer-0-delete still works. (5) Duplex: front heart, back rect+heart. On the back, X-deleting one layer and then delete-all both work, and the front keeps '1. Cuore'. The main preview no longer shows deleted layers. (6) iteration_11 fixes, all pass: the degree label is counter-rotated (rotate(-45deg) inside a 45deg frame). Resizing a rotated (45deg) layer via se/nw/e/n/sw keeps the opposite handle fixed on screen within 0.1px. Heart 'Rendi proporzionato' gives a pixel aspect of 1.173 vs 110/95=1.158; the difference is integer % rounding, so OK. No page errors.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "DecoStage keyboard delete after editing text", "issue": "Steps: type in a layer textarea, then click a layer on the stage. The box's onPointerDown calls e.preventDefault(), so the textarea KEEPS focus. Pressing Delete/Backspace then edits the hidden or previous textarea ('HELLO' became 'HELL') instead of deleting the selected layer. The key handler ignores it because e.target is TEXTAREA. This is a common flow: write text, then click another shape to delete it. Fix: in start() (DecoStage) call document.activeElement?.blur() when the active element is an input/textarea/select (or call ref.current.focus() with tabIndex=-1).", "selector": "[data-testid='item-N-deco-{side}-stage-box-K']", "priority": "MEDIUM"},
+      {"component": "DecoStage global keydown with multiple items", "issue": "Each DecoPanel has its own sel and its own window keydown listener. Steps: select a layer in item-0 (chip), then select one in item-1, then press Delete. Both listeners fire. The result was that only item-1's layer was removed, but that seems to come from a stale-state overwrite between the two set() calls, not from intent. The behaviour is fragile: the user could lose a layer in a card they are not looking at, or the delete could silently be undone. Suggested fix: clear sel on blur/outside click, or keep a single global 'active panel' selection.", "selector": "window keydown in DecoStage", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Blur the focused input/textarea when the user pointer-downs on a stage layer, so Delete/Backspace deletes the selected layer instead of editing the text.",
+    "Optional: make keyboard delete apply only to the most recently interacted panel (avoid several listeners acting at once across items)."
+  ],
+  "critical_code_review_comments": [
+    "DecoStage keydown: Backspace on a focused non-input button (e.g. a chip, the export button) also deletes the selected layer. This is acceptable, but consider limiting it to when the stage/panel has focus.",
+    "Using window.confirm for 'Cancella tutto' works, but it is inconsistent with the shadcn UI. An AlertDialog would be nicer."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "~93% (1 medium bug in the keyboard delete flow after text editing)"},
+  "seed_data_creation": "none",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Upload /tmp/imgs/a.jpg (and b.jpg for a second item) via [data-testid=add-images-input]. The layer textarea testid is item-N-deco-{side}-layer-K-txt-textarea. Duplex: duplex-switch, then item-0-deco-side-back. Register the dialog handler with asyncio.ensure_future(d.accept()). To reproduce the bug: fill the textarea, then mouse.click on a stage box, then press Backspace. The textarea loses a char and the layer remains."
+}

@@ -3,7 +3,7 @@ import { Type, Square, Circle, Trash2, Heart, X } from "lucide-react";
 import { Switch } from "./ui/switch";
 import { Segmented } from "./Field";
 import { TextEditor } from "./TextEditor";
-import { DecoStage } from "./DecoStage";
+import { DecoStage, activateStage } from "./DecoStage";
 import { newDeco, newLayer } from "../lib/deco";
 
 const NAMES = { none: "Testo", rect: "Rettangolo", ellipse: "Cerchio / Ovale", heart: "Cuore" };
@@ -61,7 +61,7 @@ export const DecoPanel = ({ item, t, set, duplex }) => {
   const pt = `${t}-deco-${s}`;
   const put = (patch) => set({ deco: { ...deco, [s]: { ...d, ...patch } } });
   const upd = (id, patch) => put({ layers: d.layers.map((l) => (l.id === id ? { ...l, ...patch } : l)) });
-  const add = (shape) => { const l = newLayer(shape); put({ layers: [...d.layers, l] }); setSel(l.id); };
+  const add = (shape) => { const l = newLayer(shape); put({ layers: [...d.layers, l] }); setSel(l.id); activateStage(`${pt}-stage`); };
   const k = d.layers.findIndex((l) => l.id === sel);
   const del = (id) => { put({ layers: d.layers.filter((x) => x.id !== id) }); if (id === sel) setSel(null); };
   return (
@@ -94,7 +94,7 @@ export const DecoPanel = ({ item, t, set, duplex }) => {
         <div className="mt-2 flex flex-wrap items-center gap-1">
           {d.layers.map((l, i) => (
             <span key={l.id} className={`flex items-center rounded-full border text-[10px] transition-colors ${sel === l.id ? "border-[#00A8E8] bg-[#00A8E8]/20 text-white" : "border-slate-700 text-slate-400 hover:text-white"}`}>
-              <button data-testid={`${pt}-chip-${i}`} onClick={() => setSel(l.id)} className="py-0.5 pl-2 pr-1">
+              <button data-testid={`${pt}-chip-${i}`} onClick={() => { setSel(l.id); activateStage(`${pt}-stage`); }} className="py-0.5 pl-2 pr-1">
                 {i + 1}. {NAMES[l.shape]}{l.txt.text ? ` · ${l.txt.text.split("\n")[0].slice(0, 12)}` : ""}
               </button>
               <button data-testid={`${pt}-chip-${i}-delete`} onClick={() => del(l.id)} title="Elimina" className="rounded-full p-1 pr-1.5 hover:text-red-400"><X size={10} /></button>

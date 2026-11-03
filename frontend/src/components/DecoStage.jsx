@@ -6,6 +6,8 @@ const H = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 const POS = { nw: [0, 0], n: [50, 0], ne: [100, 0], e: [100, 50], se: [100, 100], s: [50, 100], sw: [0, 100], w: [0, 50] };
 const CUR = { nw: "nwse", se: "nwse", ne: "nesw", sw: "nesw", n: "ns", s: "ns", e: "ew", w: "ew" };
 const MIN = 3;
+let active = null;
+export const activateStage = (id) => { active = id; };
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
 function resize(mode, o, dx, dy, W, Hh) {
@@ -88,16 +90,18 @@ export const DecoStage = ({ item, side, wcm, hcm, layers, sel, onSelect, onChang
   useEffect(() => {
     if (!sel) return;
     const key = (e) => {
-      if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || e.target.isContentEditable) return;
+      if (active !== testid || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || e.target.isContentEditable) return;
       if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); onDelete(sel); }
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [sel, onDelete]);
+  }, [sel, onDelete, testid]);
 
   const start = (e, l, mode) => {
     e.stopPropagation();
     e.preventDefault();
+    if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName)) document.activeElement.blur();
+    active = testid;
     onSelect(l.id);
     drag.current = { id: l.id, mode, rot: l.rot || 0, px: e.clientX, py: e.clientY, o: { x: l.x, y: l.y, w: l.w, h: l.h } };
   };
